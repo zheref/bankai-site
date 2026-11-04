@@ -1,0 +1,22 @@
+# Written by `nen scaffold new`. nen/ holds committed configuration;
+# .nen/ is where every nen verb writes generated output, and it is never
+# committed -- the one-character difference is what keeps a build log out of
+# a review.
+.nen/
+# nen/workflow.json's reports.dir -- generated reports, never committed.
+Reports/
+
+# site
+node_modules/
+.cache/
+public/
+.sources/
+src/data/generated/
+src/styles/tokens.generated.css
+coverage/
+playwright-report/
+test-results/
+*.log
+.env*
+!.env.example
+.claude/worktrees/

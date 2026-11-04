@@ -1,0 +1,91 @@
+{
+  "$schema": "nen.contract/v0.1",
+  "$comment": "What nen EXECUTES in this repository: one gatsby lane at the root. Every verb runs through pnpm scripts so CI and a Hatsu session run the same argv. The policy half is nen/workflow.json.",
+  "project": {
+    "lanes": {
+      "gatsby": {
+        "stack": "gatsby",
+        "cwd": "."
+      }
+    },
+    "defaultLane": "gatsby",
+    "verbs": {
+      "gatsby": {
+        "build": {
+          "exe": "pnpm",
+          "argv": [
+            "build"
+          ],
+          "$comment": "prebuild collects the pinned source repositories first (scripts/sources/collect.mjs); set BANKAI_SOURCE_<REPO> or run pnpm sources:fetch"
+        },
+        "test": {
+          "exe": "pnpm",
+          "argv": [
+            "test"
+          ],
+          "$comment": "vitest: names-map completeness, codename redaction, config, components. The slow build lane is `pnpm test:build`."
+        },
+        "lint": {
+          "exe": "pnpm",
+          "argv": [
+            "lint"
+          ],
+          "$comment": "eslint then tsc --noEmit"
+        },
+        "coverage": {
+          "exe": "pnpm",
+          "argv": [
+            "test:coverage"
+          ],
+          "$comment": "vitest --coverage (v8), reports under coverage/"
+        },
+        "ui-test": {
+          "exe": "pnpm",
+          "argv": [
+            "test:e2e"
+          ],
+          "$comment": "Playwright smoke with axe at 390px and 1440px against gatsby serve; needs `pnpm exec playwright install chromium` once"
+        },
+        "archive": {
+          "unsupported": "A static site has no archive step: the build output under public/ is the artifact the host deploys from."
+        },
+        "deploy": {
+          "unsupported": "The host for bankai.zheref.dev is TBD by the maintainer; declare a target here once it is chosen."
+        },
+        "release": {
+          "unsupported": "No release lane yet: the site deploys from main once a host is chosen; tags are optional."
+        }
+      }
+    },
+    "hosts": {
+      "*": [
+        "darwin",
+        "linux",
+        "win32"
+      ]
+    },
+    "targets": {},
+    "toolchain": {
+      "node": {
+        "version": ">=20.0.0",
+        "probe": [
+          "node",
+          "--version"
+        ],
+        "versionFrom": "first-semver-on-stdout",
+        "installer": "verify-only",
+        "why": "Gatsby 5 supports Node 18+; the CI workflow pins 20"
+      },
+      "pnpm": {
+        "version": ">=10.0.0",
+        "probe": [
+          "pnpm",
+          "--version"
+        ],
+        "versionFrom": "first-semver-on-stdout",
+        "installer": "verify-only",
+        "why": "package.json packageManager pins pnpm 10"
+      }
+    }
+  }
+}

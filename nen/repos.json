@@ -1,0 +1,32 @@
+{
+  "$comment": "Issue-routing registry for the Bankai developer site (working codename: site). A consumer: a product repository Hatsu drives, judged by the same taxonomy, gates and commit-trailer policy as the rest of the estate (CON-51(c): canonical persona trailers only). The site's own GitHub repository is zheref/bankai-site (decided 2026-11-04; the remote is created by the maintainer).",
+  "latest": "v0.1.0",
+  "consumers": [
+    {
+      "repo": "zheref/bankai-site",
+      "role": "The public developer site for Bankai",
+      "scenario": "react-uzf-v1",
+      "consumes": []
+    }
+  ],
+  "maintained_tools": [
+    {
+      "repo": "zheref/hatsu",
+      "role": "Hatsu workflow and skill prose"
+    },
+    {
+      "repo": "zheref/nen",
+      "role": "Shared deterministic machinery"
+    },
+    {
+      "repo": "zheref/bankai-handbooks",
+      "role": "Canonical handbooks, constitution and shared agent conventions"
+    }
+  ],
+  "product_codes": {
+    "BS": "zheref/bankai-site",
+    "HA": "zheref/hatsu",
+    "NN": "zheref/nen",
+    "BH": "zheref/bankai-handbooks"
+  }
+}
