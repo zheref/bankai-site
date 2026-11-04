@@ -1,0 +1,167 @@
+{
+  "$comment": "English strings. Each value is either a string or { text, source, review }. `source` cites the section of src/brand/positioning.md the copy comes from (or 'build-prompt' for factual details the build prompt fixed); `review: true` marks minimum copy the positioning doc does not provide. Technical terms and skill or agent names are never translated.",
+  "meta": {
+    "title": "bankai",
+    "description": { "text": "Bankai is an open-source, AI-driven development lifecycle for Claude Code, Codex, Cursor and Antigravity. Deterministic CLI ops, governed agents, per-stack handbooks.", "source": "Messaging hierarchy § 1 Hero subhead" },
+    "titleTemplate": "{title} · bankai"
+  },
+  "nav": {
+    "docs": "Docs",
+    "stages": { "text": "Stages", "source": "Spanish copy table → Nav" },
+    "gates": { "text": "Gates", "source": "Spanish copy table → Nav" },
+    "services": { "text": "Services", "review": true },
+    "github": "GitHub",
+    "skip": "Skip to content",
+    "menu": "Menu",
+    "theme": { "toDark": "Switch to dark mode", "toLight": "Switch to light mode" }
+  },
+  "hero": {
+    "promise": { "text": "Agentic delivery that stops at your gates.", "source": "Tagline options → 7 (the hero's one-line promise, per the build prompt)" },
+    "headline": { "text": "Agents do the work. You hold the gates.", "source": "Tagline → recommended" },
+    "subhead": { "text": "Bankai is an open-source, AI-driven development lifecycle for Claude Code, Codex, Cursor and Antigravity. Deterministic CLI ops, governed agents, per-stack handbooks.", "source": "Messaging hierarchy § 1" },
+    "ctaStart": { "text": "Get started", "source": "Messaging hierarchy § 1 CTAs" },
+    "ctaStar": { "text": "Star on GitHub", "source": "build-prompt (the positioning doc says View on GitHub)" },
+    "terminalCaption": { "text": "A real flow: work a request, push, open the PR, drive it to Ready. The merge stays yours.", "review": true },
+    "comingLater": { "text": "Coming later: Bankai-Library and hosted, autonomous runs. The path keeps going.", "source": "Spanish copy table → Coming later" }
+  },
+  "problem": {
+    "title": { "text": "Agents are fast; lifecycles are messy.", "source": "Messaging hierarchy § 2" },
+    "body": { "text": "PRs, releases and backlogs drift when every session improvises.", "source": "Messaging hierarchy § 2" }
+  },
+  "layers": {
+    "title": { "text": "How it works", "source": "Messaging hierarchy § 3" },
+    "lead": { "text": "Three live parts, one loop. Library comes later.", "source": "Messaging hierarchy § 3" },
+    "nen": { "name": "Nen", "role": "deterministic ops", "text": "A CLI for the mechanical work agents should not improvise.", "source": "Messaging hierarchy § 3" },
+    "hatsu": { "name": "Hatsu", "role": "governance harness", "text": "A skill and agent plugin with {skills} skills, {agents} agents and human gates G1-G5.", "source": "Messaging hierarchy § 3" },
+    "handbooks": { "name": "Bankai-Handbooks", "role": "the canon", "text": "Per-stack practices for SwiftUI+TCA, Jetpack Compose and React+Redux.", "source": "Messaging hierarchy § 3" },
+    "library": { "name": "Bankai-Library", "role": "coming later", "text": "Reusable components, next on the path. Coming later.", "source": "Coming later teasers" },
+    "cloud": { "role": "coming later", "text": "Hosted, autonomous runs. Coming later.", "source": "Coming later teasers" }
+  },
+  "stages": {
+    "title": { "text": "Every stage of the lifecycle, with a skill behind it", "review": true },
+    "lead": { "text": "Lead with the plain-English verb, then the code name. Each card names the skills that run the stage and whether it is available today.", "review": true },
+    "available": "Available",
+    "planned": "Planned",
+    "items": {
+      "intake": { "title": "Intake and spec", "text": "A raw idea interviewed into a decision-complete brief, challenged, then filed as one issue.", "review": true },
+      "build": { "title": "Build", "text": "One request per turn in an isolated worktree: warm up, author, verify, commit locally. Never pushes.", "review": true },
+      "review": { "title": "Review and test", "text": "Adversarial review before the PR, the impacted suites, coverage against the ladder.", "review": true },
+      "pr": { "title": "PR to Ready", "text": "Push when you decide, one PR with a composed body, then the readiness watch to your merge prompt.", "review": true },
+      "backlog": { "title": "Backlog operations", "text": "A severity band, a label, a hand-picked list or the whole surface-matched backlog, delivered to gates.", "review": true },
+      "release": { "title": "Release", "text": "The tag cut with its own proposal PR, a non-production send, and publication only on your typed go.", "review": true },
+      "adopt": { "title": "Adopt and maintain", "text": "Make a repository a consumer, keep its canon mirror current, raise runners, install a CI tier, update Hatsu.", "review": true },
+      "validate": { "title": "Validate and clean up", "text": "Post-merge UI validation on your call, the leftovers inventoried and removed only as you picked.", "review": true }
+    }
+  },
+  "architecture": {
+    "title": { "text": "The layers, and the five human gates", "review": true },
+    "lead": { "text": "Nen at the base, Hatsu on top, the Handbooks as canon. The Cloud tier is the future autonomous plane; the Library is roadmap. Select a layer or a gate.", "review": true },
+    "gatesTitle": { "text": "Human gates", "source": "Messaging hierarchy § 4" },
+    "gatesLead": { "text": "Agents propose; you decide. Hatsu drives work to a gate and stops there.", "source": "Brand pillars § 1" }
+  },
+  "quickstart": {
+    "title": { "text": "Quick start", "review": true },
+    "lead": { "text": "One checkout serves every surface. Pick yours: the install command, the session command, a first request, and the Nen bootstrap at the version Hatsu pins.", "review": true },
+    "install": "Install",
+    "session": "Open a session",
+    "request": "A first request",
+    "nen": "Nen bootstrap",
+    "nenNote": { "text": "Hatsu's warm-up installs this pin for you, checksum-verified. The command below is the same bootstrap by hand, at the ref Hatsu's contract pins.", "review": true },
+    "guide": "Full guide"
+  },
+  "oss": {
+    "title": { "text": "Open source, complete on its own", "review": true },
+    "lead": { "text": "MIT, fully public and free, built in the open by zheref. Everything below the line runs on your own credentials today.", "source": "Messaging hierarchy § 6" },
+    "freeTitle": "Open source",
+    "cloudTitle": "{cloud}, coming later",
+    "complete": { "text": "The open-source system is complete on its own: nothing here is crippled to sell a hosted tier.", "source": "build-prompt" },
+    "rows": {
+      "nen": "Nen, the deterministic CLI",
+      "hatsu": "Hatsu, the governance harness",
+      "handbooks": "Bankai-Handbooks, the canon",
+      "library": "Bankai-Library (coming later)",
+      "credentials": "Runs on your own credentials",
+      "autonomous": "Autonomous runs in your org",
+      "apps": "GitHub App agents",
+      "runners": "Managed or self-hosted runners",
+      "byok": "Always bring your own model API key"
+    },
+    "yes": "Included",
+    "no": "Not included",
+    "later": "Coming later",
+    "teaser": { "text": "Hosted, autonomous runs are coming later. Get notified.", "source": "Messaging hierarchy § 6 teaser" },
+    "notify": "Get notified",
+    "notifyUnset": { "text": "A waitlist opens later.", "review": true },
+    "credentialsNote": { "text": "The maintainer's own Claude subscriptions are used only for building Bankai itself, never for customers' work. Customers always bring their own model API key.", "source": "build-prompt" }
+  },
+  "support": {
+    "title": { "text": "Support the project", "source": "Loke's review → GitHub Sponsors; Sergio's decision 2026-11-04" },
+    "lead": { "text": "Bankai is built in the open by one maintainer. Sponsorship keeps it that way.", "review": true },
+    "fundsTitle": { "text": "What sponsorship funds", "review": true },
+    "button": "Sponsor on GitHub",
+    "wallTitle": { "text": "Sponsors", "review": true },
+    "wallEmpty": { "text": "No sponsors yet. The first names appear here.", "review": true }
+  },
+  "services": {
+    "title": { "text": "Governed AI delivery setup for dev teams", "source": "build-prompt" },
+    "lead": { "text": "Delivered by {provider}, a product that leverages Bankai. Bankai itself stays open source and free; this is the hands-on setup for a team that wants it installed and tuned.", "source": "Sergio's decisions 2026-11-04 (ValleIA as a consumer of Bankai)" },
+    "setupTitle": "Fixed-fee setup",
+    "setupText": { "text": "Install the CLI and the harness in your repositories, tune the handbooks for your stack, and train the team on the gates.", "review": true },
+    "careTitle": "Care plan",
+    "careText": { "text": "Optional monthly care: updates, repins and a standing line to the people who set it up.", "review": true },
+    "from": "From",
+    "perMonth": "per month",
+    "contactUs": "Contact us",
+    "tbd": "TBD",
+    "providerLink": "About {provider}",
+    "aliasNote": { "text": "On this page the harness's parts are named by what they do.", "review": true }
+  },
+  "pricing": {
+    "title": "{cloud}",
+    "lead": { "text": "A subscription frame for the future {cloud}: bring your own model API key; the platform fee covers the agents, the GitHub App and updates. Nothing here is on sale yet; every value is TBD.", "source": "build-prompt" },
+    "byok": "Bring your own model API key",
+    "publicFree": "Free for public repositories",
+    "trial": "Trial length",
+    "custom": "Custom",
+    "minimum": "Minimum {n} developers",
+    "or": "or",
+    "hidden": { "text": "This page is hidden from production builds behind SHOW_PRICING.", "review": true }
+  },
+  "faq": {
+    "title": "FAQ",
+    "items": {
+      "free": { "q": "Is it free?", "a": "Yes. Nen, Hatsu and the Handbooks are MIT licensed, fully open source, public and free. A hosted tier is coming later and is not for sale yet.", "source": "Proof points; Legal guardrails" },
+      "agents": { "q": "Which agents and models?", "a": "Hatsu runs inside Claude Code, Codex, Cursor and Antigravity. A tier is named, never a model version: frontier for your own session, deep for reviewers, fast for workers, economy for watchers. The live model id is read from your surface when a skill runs.", "source": "Brand pillars § 4; hatsu README § Models and surfaces" },
+      "merge": { "q": "Does it merge or publish on its own?", "a": "No. Every PR ends at your merge prompt, and publication runs only on your typed go. Agents propose; you decide at the gates.", "source": "Brand pillars § 1; hatsu README" },
+      "where": { "q": "Where does my code run?", "a": "On your machine, in the agent you already use, on your own credentials. There is no hosted Bankai today.", "source": "Brand pillars § 4" },
+      "pays": { "q": "Who pays for model usage?", "a": "You do, with your own key or subscription on the surface you run. The future Cloud tier will also require your own model API key.", "source": "build-prompt" },
+      "stacks": { "q": "Which stacks?", "a": "The Handbooks cover SwiftUI+TCA, Jetpack Compose and React+Redux Toolkit, plus baselines for security, UX, release and quality that apply everywhere.", "source": "Proof points" },
+      "update": { "q": "How do I update?", "a": "Run the update skill on your surface: it fast-forwards the checkout you keep and ends with the one thing left to type.", "source": "hatsu docs/using" },
+      "hosted": { "q": "Is there a hosted version?", "a": "Not yet. Hosted, autonomous runs are coming later, unnamed and unpriced until then.", "source": "Legal guardrails; Coming later" }
+    }
+  },
+  "footer": {
+    "license": "MIT license",
+    "sponsors": "Sponsors",
+    "builtBy": { "text": "Built in the open by {handle}.", "source": "Messaging hierarchy § 6" },
+    "disclaimerFull": "Bankai is an independent open-source project. It is not affiliated with, endorsed by, or sponsored by the creators, publishers, or rights holders of any anime or manga whose terms inspired its names. All trademarks belong to their respective owners.",
+    "disclaimerShort": "Independent open-source project. Not affiliated with or endorsed by any anime or manga rights holder.",
+    "sources": { "text": "Versions and commands on this site are read from the repositories at build time.", "review": true }
+  },
+  "docs": {
+    "title": "Docs",
+    "search": "Search docs",
+    "searchPlaceholder": "Search skills, verbs, pages",
+    "noResults": "No results",
+    "onThisPage": "On this page",
+    "readAt": "Read from the repositories at commit",
+    "codeName": "code name",
+    "alias": "alias",
+    "gate": "stops at",
+    "prerequisites": "Prerequisites",
+    "runs": "What runs",
+    "calledBy": "Called by",
+    "meaning": "What it does"
+  },
+  "badges": { "tbd": "TBD", "proposed": "Proposed", "roadmap": "Roadmap", "comingLater": "Coming later" }
+}

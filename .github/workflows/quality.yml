@@ -1,0 +1,52 @@
+# Site quality lane: unit tests, the build lane (pricing hidden in production, TBD-tagged in preview),
+# Playwright smoke with axe at 390 px and 1440 px, and Lighthouse (mobile, 95+). The declaration-driven
+# build/test/lint lane is nen-shu.yml. READ-ONLY: this workflow pushes nothing and comments on nothing.
+name: quality
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    env:
+      GATSBY_TELEMETRY_DISABLED: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: source repositories at the pinned commits
+        run: pnpm sources:fetch
+      - name: unit tests with coverage
+        run: pnpm test:coverage
+      - name: build lane (production hides /pricing; SHOW_PRICING=true renders it TBD-tagged)
+        run: pnpm test:build
+      - name: production build for the smoke and Lighthouse runs
+        run: pnpm build
+      - name: playwright browsers
+        run: pnpm exec playwright install --with-deps chromium
+      - name: smoke + axe (mobile and desktop)
+        run: pnpm test:e2e
+      - name: lighthouse (mobile)
+        run: |
+          pnpm exec gatsby serve -p 9000 &
+          sleep 5
+          node scripts/lighthouse.mjs / /docs/ /services/
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: reports
+          path: |
+            Reports/lighthouse
+            playwright-report
+            coverage/lcov.info
+          if-no-files-found: ignore

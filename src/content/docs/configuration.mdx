@@ -1,0 +1,16 @@
+---
+slug: configuration
+title: Configuration
+description: Every configuration file Hatsu reads, and what each one decides.
+order: 7
+---
+
+Hatsu reads a small set of declaration files and invents nothing beyond them. Two of them split along one line: `nen/contract.json` states a fact about the machine (how this repository is built, tested, linted, launched and shipped) and `nen/workflow.json` states a decision about the work (how the roster works in it). Validation is `nen schema check --repo <path>`, one row per file.
+
+<SourceStamp />
+
+<ConfigFiles />
+
+## Hatsu's own pin
+
+<NenPin />

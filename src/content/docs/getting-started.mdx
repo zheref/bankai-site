@@ -1,0 +1,62 @@
+---
+slug: getting-started
+title: Getting started
+description: One checkout serves every surface. Install Hatsu on yours, let the warm-up bind Nen, and run a first request.
+order: 1
+---
+
+Three things are the same everywhere: `nen` (installed and bound by the warm-up), `git` and `gh` authenticated as you, and a `nen/contract.json` in the repository you point Hatsu at. That contract is the only thing Hatsu asks of your project. A `python3` on the host is a prerequisite on the installed plugin path.
+
+<SourceStamp />
+
+## 1. A checkout you keep
+
+Every surface is served from one git checkout of the Hatsu repository. Claude Code links it in place, Antigravity links its generated plugin, Codex copies it per version through its plugin install, and Cursor links each skill into it. Keep the checkout on `main`: whatever it holds is what every session serves.
+
+## 2. Install on your surface
+
+### Claude Code
+
+<Snippet id="install-claude-code" showSource />
+
+Then open a new session, or type `/reload-plugins` in one that is running, and summon the lead persona with `/kurapika`. `/kurapika <request>` runs the warm-up and takes the request as the first turn of the loop.
+
+<Snippet id="usage-claude-code" showSource />
+
+### Codex
+
+<Snippet id="install-codex" showSource />
+
+<Snippet id="usage-codex" showSource />
+
+### Cursor
+
+Check the version first: below `2026.01` the install succeeds and the surface sees nothing.
+
+<Snippet id="install-cursor" showSource />
+
+<Snippet id="usage-cursor" showSource />
+
+### Antigravity
+
+<Snippet id="install-antigravity" showSource />
+
+<Snippet id="usage-antigravity" showSource />
+
+## 3. Nen, at the version Hatsu pins
+
+Hatsu's warm-up installs the pinned Nen for you, checksum-verified, and links it at `~/.local/bin/nen` so your terminal and the agent run the same build. By hand, the same bootstrap at the ref Hatsu's contract pins:
+
+<Snippet id="nen-bootstrap" showSource />
+
+The pin, read from `nen/contract.json` in the Hatsu repository:
+
+<NenPin />
+
+The latest Nen release, from Nen's own README:
+
+<Snippet id="nen-bootstrap-latest" showSource />
+
+## 4. The first request, and what happens next
+
+A request runs the loop in an isolated effort worktree and commits locally; nothing is pushed. When you decide the branch goes up, call the push phase; then the PR phase runs review, impacted tests, coverage and opens one PR, and the readiness watch drives it to Ready. The merge is yours, in GitHub. The [Concepts](/docs/concepts/) page explains the loop and the gates; the [Hatsu guide](/docs/hatsu-guide/) lists every skill.
