@@ -1,7 +1,32 @@
 {
-  "$comment": "The one names map: every Hatsu skill and agent with its code name (as the repository spells it), a plain alias and a one-line description. Aliases marked aliasSource 'D4' come from the Naming section D4 of the Craft build-prompt document (2026-11-04); 'derived' aliases are the site's plain-English reading of the hatsu README's Meaning column and are flagged for review. Code names stay as the OSS spells them (Sergio's call); the shibari → musubi rename is PROPOSED only. A build-time test fails when a skill or agent in the hatsu repository is missing here. Descriptions are the site's own one-liners; the repository's frontmatter is rendered beside them on the docs pages.",
-  "proposedRenames": [{ "from": "shibari", "to": "musubi", "status": "proposed", "decidedBy": "Sergio" }],
-  "characterNames": ["kurapika", "gon", "hisoka", "phinks", "uvogin", "feitan", "chrollo", "illumi", "netero", "nobunaga", "shalnark", "leorio", "shizuku", "satotz", "lippo", "buhara", "bisky"],
+  "$comment": "The one names map: every Hatsu skill and agent with its code name (as the repository spells it), a plain alias and a one-line description. Aliases marked aliasSource 'D4' come from the Naming section D4 of the Craft build-prompt document (2026-11-04); 'derived' aliases are the site's plain-English reading of the hatsu README's Meaning column and are flagged for review. Code names stay as the OSS spells them (Sergio's call); the shibari \u2192 musubi rename is PROPOSED only. A build-time test fails when a skill or agent in the hatsu repository is missing here. Descriptions are the site's own one-liners; the repository's frontmatter is rendered beside them on the docs pages.",
+  "proposedRenames": [
+    {
+      "from": "shibari",
+      "to": "musubi",
+      "status": "proposed",
+      "decidedBy": "Sergio"
+    }
+  ],
+  "characterNames": [
+    "kurapika",
+    "gon",
+    "hisoka",
+    "phinks",
+    "uvogin",
+    "feitan",
+    "chrollo",
+    "illumi",
+    "netero",
+    "nobunaga",
+    "shalnark",
+    "leorio",
+    "shizuku",
+    "satotz",
+    "lippo",
+    "buhara",
+    "bisky"
+  ],
   "groups": {
     "session": "Session and host",
     "turn-loop": "The turn loop",
@@ -10,85 +35,558 @@
     "release-canon": "Release, consumers and canon"
   },
   "agents": {
-    "kurapika": { "alias": "Lead", "aliasSource": "D4", "description": "The lead persona and the whole local plane in one identity; names one of six work-modes before acting.", "modes": [{ "code": "Enhancer", "alias": "product code" }, { "code": "Conjurer", "alias": "canon and governance authoring" }, { "code": "Transmuter", "alias": "machinery" }, { "code": "Manipulator", "alias": "GitHub-side operations" }, { "code": "Emitter", "alias": "release and fan-out" }, { "code": "Specialist", "alias": "product intake" }] },
-    "nobunaga": { "alias": "Code Reviewer", "aliasSource": "D4", "description": "Code practices, scope completeness and adversarial reading; the default reviewer on every change." },
-    "hisoka": { "alias": "UI Reviewer", "aliasSource": "D4", "description": "UI/UX review and cheap objective measurement before a PR, citing the UX baseline by rule id." },
-    "feitan": { "alias": "Security", "aliasSource": "D4", "description": "Security review only: deterministic scans first, then the security baseline by rule id." },
-    "chrollo": { "alias": "Architecture", "aliasSource": "D4", "description": "Architecture and handbook conformance against the one stack handbook that governs the repository." },
-    "uvogin": { "alias": "Performance", "aliasSource": "D4", "description": "Performance on seven fixed metrics, each number with its method and baseline." },
-    "phinks": { "alias": "Release QA", "aliasSource": "D4", "description": "Adversarial pre-release QA: files only a test failing three times or a measured number." },
-    "leorio": { "alias": "Economics", "aliasSource": "D4", "description": "Economics review, only when a change may move money; a charted report for and against." },
-    "illumi": { "alias": "Watcher", "aliasSource": "D4", "description": "The long read-only watch while a PR waits for readiness; wakes the lead, never acts." },
-    "shalnark": { "alias": "UI Validator", "aliasSource": "D4", "description": "Post-merge UI validation: ephemeral automated tests against the delivered acceptance criteria." },
-    "netero": { "alias": "Process Chair", "aliasSource": "D4", "description": "Chairman of process: files complete issues when canon or machinery need enhancement." },
-    "shizuku": { "alias": "Cleanup", "aliasSource": "D4", "description": "Cleanup only: inventories what an effort left behind and removes only what you picked." },
-    "gon": { "alias": "Delegate", "aliasSource": "D4", "description": "The mission-scoped trusted delegate; his delegation grammar is a draft, so he crosses no gate." },
-    "satotz": { "alias": "Brief Examiner", "aliasSource": "D4", "description": "Challenges a product brief's problem, audience, success criteria and scope at intake." },
-    "lippo": { "alias": "Spec Examiner", "aliasSource": "D4", "description": "Challenges a brief's edge cases and conflicts with the specification in force." },
-    "buhara": { "alias": "Platform Examiner", "aliasSource": "D4", "description": "Challenges each platform's constraints and the parity a brief promises across them." },
-    "bisky": { "alias": "Design Examiner", "aliasSource": "D4", "description": "Drafts a brief's Design Direction, then challenges its rendered parts." }
+    "kurapika": {
+      "alias": "Lead",
+      "aliasSource": "D4",
+      "description": "The lead persona and the whole local plane in one identity; names one of six work-modes before acting.",
+      "modes": [
+        {
+          "code": "Enhancer",
+          "alias": "product code"
+        },
+        {
+          "code": "Conjurer",
+          "alias": "canon and governance authoring"
+        },
+        {
+          "code": "Transmuter",
+          "alias": "machinery"
+        },
+        {
+          "code": "Manipulator",
+          "alias": "GitHub-side operations"
+        },
+        {
+          "code": "Emitter",
+          "alias": "release and fan-out"
+        },
+        {
+          "code": "Specialist",
+          "alias": "product intake"
+        }
+      ]
+    },
+    "nobunaga": {
+      "alias": "Code Reviewer",
+      "aliasSource": "D4",
+      "description": "Code practices, scope completeness and adversarial reading; the default reviewer on every change."
+    },
+    "hisoka": {
+      "alias": "UI Reviewer",
+      "aliasSource": "D4",
+      "description": "UI/UX review and cheap objective measurement before a PR, citing the UX baseline by rule id."
+    },
+    "feitan": {
+      "alias": "Security",
+      "aliasSource": "D4",
+      "description": "Security review only: deterministic scans first, then the security baseline by rule id."
+    },
+    "chrollo": {
+      "alias": "Architecture",
+      "aliasSource": "D4",
+      "description": "Architecture and handbook conformance against the one stack handbook that governs the repository."
+    },
+    "uvogin": {
+      "alias": "Performance",
+      "aliasSource": "D4",
+      "description": "Performance on seven fixed metrics, each number with its method and baseline."
+    },
+    "phinks": {
+      "alias": "Release QA",
+      "aliasSource": "D4",
+      "description": "Adversarial pre-release QA: files only a test failing three times or a measured number."
+    },
+    "leorio": {
+      "alias": "Economics",
+      "aliasSource": "D4",
+      "description": "Economics review, only when a change may move money; a charted report for and against."
+    },
+    "illumi": {
+      "alias": "Watcher",
+      "aliasSource": "D4",
+      "description": "The long read-only watch while a PR waits for readiness; wakes the lead, never acts."
+    },
+    "shalnark": {
+      "alias": "UI Validator",
+      "aliasSource": "D4",
+      "description": "Post-merge UI validation: ephemeral automated tests against the delivered acceptance criteria."
+    },
+    "netero": {
+      "alias": "Process Chair",
+      "aliasSource": "D4",
+      "description": "Chairman of process: files complete issues when canon or machinery need enhancement."
+    },
+    "shizuku": {
+      "alias": "Cleanup",
+      "aliasSource": "D4",
+      "description": "Cleanup only: inventories what an effort left behind and removes only what you picked."
+    },
+    "gon": {
+      "alias": "Delegate",
+      "aliasSource": "D4",
+      "description": "The mission-scoped trusted delegate; his delegation grammar is a draft, so he crosses no gate."
+    },
+    "satotz": {
+      "alias": "Brief Examiner",
+      "aliasSource": "D4",
+      "description": "Challenges a product brief's problem, audience, success criteria and scope at intake."
+    },
+    "lippo": {
+      "alias": "Spec Examiner",
+      "aliasSource": "D4",
+      "description": "Challenges a brief's edge cases and conflicts with the specification in force."
+    },
+    "buhara": {
+      "alias": "Platform Examiner",
+      "aliasSource": "D4",
+      "description": "Challenges each platform's constraints and the parity a brief promises across them."
+    },
+    "bisky": {
+      "alias": "Design Examiner",
+      "aliasSource": "D4",
+      "description": "Drafts a brief's Design Direction, then challenges its rendered parts."
+    }
   },
   "skills": {
-    "ten": { "alias": "warm-up", "aliasSource": "derived", "group": "session", "description": "Verify and bind the pinned Nen on the host and place this surface's copy; the first step of every session.", "gate": "none" },
-    "bakuryuha": { "alias": "update", "aliasSource": "D4", "group": "session", "description": "Bring this surface's Hatsu to the newest version its channel offers and switch onto it.", "gate": "none" },
-    "ren": { "alias": "work a request", "aliasSource": "derived", "group": "turn-loop", "description": "One request, one turn, in an isolated effort worktree; never pushes.", "gate": "stops before aka (push is yours)" },
-    "breath": { "alias": "warm up the effort", "aliasSource": "derived", "group": "turn-loop", "description": "Once per effort: fetch, fast-forward the base, cut the branch, prove the checks on the fresh tip.", "gate": "G5 on a red base" },
-    "rasengan": { "alias": "author", "aliasSource": "D4", "group": "turn-loop", "description": "Author the change and its focused tests inside the request's scope; commits nothing.", "gate": "none" },
-    "kokusen": { "alias": "commit", "aliasSource": "D4", "group": "turn-loop", "description": "Verify the finished tree, then commit locally with a formatted message.", "gate": "none" },
-    "gyo": { "alias": "lint", "aliasSource": "derived", "group": "turn-loop", "description": "Lint, the declared lint verb; never tests, never coverage.", "gate": "none" },
-    "tsukuyomi": { "alias": "focused tests", "aliasSource": "derived", "group": "turn-loop", "description": "The focused tests for the behaviour this turn changed; never the full suite.", "gate": "none" },
-    "amaterasu": { "alias": "launch", "aliasSource": "derived", "group": "turn-loop", "description": "Build and launch the declared target from your core checkout and hand back the command.", "gate": "none" },
-    "spiritual-message": { "alias": "turn report", "aliasSource": "derived", "group": "turn-loop", "description": "The rich turn or landing report: what landed, what did not, evidence and spend.", "gate": "none" },
-    "jutaisho": { "alias": "bell", "aliasSource": "derived", "group": "turn-loop", "description": "Ring the bell at the end of a turn and ask the gate question through your surface's picker.", "gate": "rings at any gate" },
-    "ao": { "alias": "catch up", "aliasSource": "derived", "group": "turn-loop", "description": "Pull from the base: rebase if unpushed, merge if published; a semantic conflict stops.", "gate": "G5 on a semantic conflict" },
-    "aka": { "alias": "push", "aliasSource": "derived", "group": "pr-side", "description": "Push, yours to call: lint, squash the unpushed commits, catch up, push.", "gate": "human-called phase" },
-    "mukai": { "alias": "open the PR", "aliasSource": "derived", "group": "pr-side", "description": "The whole PR side in order: review, tests, coverage, evidence, one PR, then the offer of en.", "gate": "human-called phase; ends at the merge prompt through en" },
-    "murasaki": { "alias": "catch up a published branch", "aliasSource": "derived", "group": "pr-side", "description": "Bring a published branch up to date with its base and rerun the checks before any push.", "gate": "none" },
-    "hanten": { "alias": "review", "aliasSource": "derived", "group": "pr-side", "description": "Adversarial review before the PR: one reviewer per raised scope, every finding settled.", "gate": "G5 on an unsettled finding" },
-    "kotoamatsukami": { "alias": "impacted tests", "aliasSource": "derived", "group": "pr-side", "description": "The project-wide unit, UI and integration suites the change can affect.", "gate": "G5 on red required tests" },
-    "byakugan": { "alias": "coverage", "aliasSource": "D4", "group": "pr-side", "description": "Coverage capture and touched-file measurement against the declared ladder.", "gate": "G5 under the coverage minimum" },
-    "shibari": { "alias": "PR body and open", "aliasSource": "derived", "group": "pr-side", "description": "Compose the PR body from the section catalogue, check it, open one PR and request reviewers.", "gate": "none" },
-    "en": { "alias": "readiness watch", "aliasSource": "derived", "group": "pr-side", "description": "One PR from open to verified Ready and your merge prompt, under an acting-cycle cap.", "gate": "G2 or G4 merge prompt" },
-    "sharingan": { "alias": "drive-to-ready", "aliasSource": "D4", "group": "pr-side", "description": "Drive one PR to readiness at its gate and stop there; never merges, never votes.", "gate": "G2 or G4" },
-    "pr-state": { "alias": "PR readiness", "aliasSource": "derived", "group": "pr-side", "description": "One PR's readiness as the deterministic verdict, quoted conjunct by conjunct. Read-only.", "gate": "none" },
-    "third-hand": { "alias": "harvest friction", "aliasSource": "derived", "group": "pr-side", "description": "The sitting's process friction harvested into up to three issues you pick.", "gate": "none" },
-    "cleanup": { "alias": "cleanup", "aliasSource": "derived", "group": "pr-side", "description": "What a finished effort left behind, inventoried and removed only as you picked.", "gate": "none" },
-    "amenotejikara": { "alias": "swap worktree", "aliasSource": "derived", "group": "pr-side", "description": "Swap which worktree your core checkout holds, and swap back; never discards.", "gate": "none" },
-    "jujutsu": { "alias": "pair a device", "aliasSource": "derived", "group": "pr-side", "description": "Pair a device and register it as a launch target through a PR.", "gate": "G5 on on-device steps" },
-    "emperor-time": { "alias": "intake", "aliasSource": "D4", "group": "backlog", "description": "Product intake: one raw idea interviewed into a decision-complete brief, challenged, filed on your confirmation.", "gate": "G1 epic approval" },
-    "file": { "alias": "file an issue", "aliasSource": "derived", "group": "backlog", "description": "One well-formed, correctly labelled, non-duplicate issue.", "gate": "none" },
-    "classify": { "alias": "classify", "aliasSource": "derived", "group": "backlog", "description": "The two label axes, language and job, on an issue, a set, a backlog or an inline effort.", "gate": "none" },
-    "direct": { "alias": "route to a model", "aliasSource": "derived", "group": "backlog", "description": "Which model should do the work and where: three picks on five axes, read live.", "gate": "none" },
-    "build": { "alias": "build an issue", "aliasSource": "derived", "group": "backlog", "description": "One issue to a delivery PR standing at its human gate.", "gate": "G2 or G4 merge prompt" },
-    "futon": { "alias": "work a backlog band", "aliasSource": "derived", "group": "backlog", "description": "One selector of the backlog to PRs, then the typed next step once every PR is merged.", "gate": "G2 per PR; the then step on your advance go" },
-    "kazaana": { "alias": "model-sweep", "aliasSource": "D4", "group": "backlog", "description": "Everything this surface's model can build, delivered in parallel, then the release tag.", "gate": "G2 per PR; G3 asked once after the tag" },
-    "kage-bunshin": { "alias": "parallel-build", "aliasSource": "D4", "group": "backlog", "description": "A hand-picked list of issues, each to a PR at its gate, in order or in parallel.", "gate": "G2 per PR" },
-    "kamui": { "alias": "spec and port", "aliasSource": "derived", "group": "backlog", "description": "One issue or shipped PR written as the product family's spec, then port issues per sibling you pick.", "gate": "G2 on the spec PR" },
-    "dowsing-chain": { "alias": "spec-capture", "aliasSource": "D4", "group": "backlog", "description": "A product family's repositories read into one living spec, landed in waves.", "gate": "G2 per wave" },
-    "hiraishin": { "alias": "port a PR", "aliasSource": "derived", "group": "backlog", "description": "One merged PR ported to one sibling repository, spec first, built to the target's merge prompt.", "gate": "G1 on the typed call; G2 on the port" },
-    "backlog-loop": { "alias": "backlog to zero", "aliasSource": "derived", "group": "backlog", "description": "The backlog to zero in severity order, with release tags at batch boundaries.", "gate": "G2 per PR" },
-    "backlog-synthesis": { "alias": "consolidate the backlog", "aliasSource": "derived", "group": "backlog", "description": "A long backlog reconciled into a short one, behind a plan you approve.", "gate": "plan approval" },
-    "backlog-state": { "alias": "backlog table", "aliasSource": "derived", "group": "backlog", "description": "The backlog as one gate-oriented table. Read-only.", "gate": "none" },
-    "backlog-board": { "alias": "gate board", "aliasSource": "derived", "group": "backlog", "description": "The same sweep as a rendered board page. Read-only.", "gate": "none" },
-    "rikugan": { "alias": "final report", "aliasSource": "D4", "group": "backlog", "description": "The final state of a just-completed workflow as one page. Read-only.", "gate": "none" },
-    "senkei": { "alias": "inventory efforts", "aliasSource": "derived", "group": "backlog", "description": "A consumer repository's own efforts inventoried and classified, stuck PRs handed on.", "gate": "none" },
-    "black-voice": { "alias": "ui-validate", "aliasSource": "D4", "group": "backlog", "description": "Post-merge UI validation, on your call only.", "gate": "none (after the gate)" },
-    "izanagi": { "alias": "repeat, acting", "aliasSource": "derived", "group": "backlog", "description": "Repeat an acting task until a condition holds, under a mandatory cap.", "gate": "none" },
-    "izanami": { "alias": "repeat, read-only", "aliasSource": "derived", "group": "backlog", "description": "Repeat a read-only task until a condition holds.", "gate": "none" },
-    "tensho": { "alias": "wip-to-pr", "aliasSource": "D4", "group": "backlog", "description": "A dirty working copy into one PR standing at its gate.", "gate": "G2 or G4" },
-    "jujisho": { "alias": "split-pr", "aliasSource": "D4", "group": "backlog", "description": "A mixed working copy split into two stacked PRs by axis.", "gate": "G2 or G4" },
-    "susanoo": { "alias": "package", "aliasSource": "derived", "group": "release-canon", "description": "The distributable the lane declares, built locally; uploads nothing.", "gate": "none" },
-    "getsuga": { "alias": "release", "aliasSource": "D4", "group": "release-canon", "description": "The release tag end to end, with its own release-proposal PR.", "gate": "human-called phase; the tag, never publication" },
-    "kagutsuchi": { "alias": "send a build", "aliasSource": "derived", "group": "release-canon", "description": "A build to a declared non-production destination, behind a freshness gate.", "gate": "human-called phase" },
-    "mugetsu": { "alias": "publish", "aliasSource": "D4", "group": "release-canon", "description": "Publish one release to one production destination, on your own go only.", "gate": "G3" },
-    "tenkai": { "alias": "adopt a repository", "aliasSource": "derived", "group": "release-canon", "description": "Make a repository a working consumer, deterministically; diagnoses before it writes.", "gate": "G2 on the adoption PRs" },
-    "okiro": { "alias": "new project", "aliasSource": "derived", "group": "release-canon", "description": "Stand up a new Hatsu-first project in an empty directory from one confirmed plan.", "gate": "plan confirmation" },
-    "limbo": { "alias": "canon mirror sync", "aliasSource": "derived", "group": "release-canon", "description": "A consumer's canon mirror kept current on every declared surface.", "gate": "G2" },
-    "jusshin": { "alias": "self-hosted runners", "aliasSource": "derived", "group": "release-canon", "description": "A consumer's self-hosted runners raised and proven by a preflight job.", "gate": "G5 on consent" },
-    "kuchiyose": { "alias": "install a CI tier", "aliasSource": "derived", "group": "release-canon", "description": "A CI reviewers tier installed on an adopted consumer as one PR; Apps and secrets stay yours.", "gate": "G2 on the install PR" },
-    "great-hiker": { "alias": "author canon", "aliasSource": "derived", "group": "release-canon", "description": "Canon prose and machinery authored once and landed on every surface.", "gate": "G4" },
-    "bankai-handbooks": { "alias": "resolve handbooks", "aliasSource": "derived", "group": "release-canon", "description": "Which handbooks and rule-id prefixes govern a repository, read from the pinned canon.", "gate": "none" },
-    "bankai-quality": { "alias": "resolve QA tooling", "aliasSource": "derived", "group": "release-canon", "description": "Which QA and performance tooling a repository's scenario uses.", "gate": "none" },
-    "bankai-rule": { "alias": "record a port ruling", "aliasSource": "derived", "group": "release-canon", "description": "One port ruling recorded as a row in the handbooks' ports file, one PR per run.", "gate": "G4" }
-  }
+    "ten": {
+      "alias": "warm-up",
+      "aliasSource": "derived",
+      "group": "session",
+      "description": "Verify and bind the pinned Nen on the host and place this surface's copy; the first step of every session.",
+      "gate": "none"
+    },
+    "bakuryuha": {
+      "alias": "update",
+      "aliasSource": "D4",
+      "group": "session",
+      "description": "Bring this surface's Hatsu to the newest version its channel offers and switch onto it.",
+      "gate": "none"
+    },
+    "ren": {
+      "alias": "work a request",
+      "aliasSource": "derived",
+      "group": "turn-loop",
+      "description": "One request, one turn, in an isolated effort worktree; never pushes.",
+      "gate": "stops before aka (push is yours)"
+    },
+    "breath": {
+      "alias": "warm up the effort",
+      "aliasSource": "derived",
+      "group": "turn-loop",
+      "description": "Once per effort: fetch, fast-forward the base, cut the branch, prove the checks on the fresh tip.",
+      "gate": "G5 on a red base"
+    },
+    "rasengan": {
+      "alias": "author",
+      "aliasSource": "D4",
+      "group": "turn-loop",
+      "description": "Author the change and its focused tests inside the request's scope; commits nothing.",
+      "gate": "none"
+    },
+    "kokusen": {
+      "alias": "commit",
+      "aliasSource": "D4",
+      "group": "turn-loop",
+      "description": "Verify the finished tree, then commit locally with a formatted message.",
+      "gate": "none"
+    },
+    "gyo": {
+      "alias": "lint",
+      "aliasSource": "derived",
+      "group": "turn-loop",
+      "description": "Lint, the declared lint verb; never tests, never coverage.",
+      "gate": "none"
+    },
+    "tsukuyomi": {
+      "alias": "focused tests",
+      "aliasSource": "derived",
+      "group": "turn-loop",
+      "description": "The focused tests for the behaviour this turn changed; never the full suite.",
+      "gate": "none"
+    },
+    "amaterasu": {
+      "alias": "launch",
+      "aliasSource": "derived",
+      "group": "turn-loop",
+      "description": "Build and launch the declared target from your core checkout and hand back the command.",
+      "gate": "none"
+    },
+    "spiritual-message": {
+      "alias": "turn report",
+      "aliasSource": "derived",
+      "group": "turn-loop",
+      "description": "The rich turn or landing report: what landed, what did not, evidence and spend.",
+      "gate": "none"
+    },
+    "jutaisho": {
+      "alias": "bell",
+      "aliasSource": "derived",
+      "group": "turn-loop",
+      "description": "Ring the bell at the end of a turn and ask the gate question through your surface's picker.",
+      "gate": "rings at any gate"
+    },
+    "ao": {
+      "alias": "catch up",
+      "aliasSource": "derived",
+      "group": "turn-loop",
+      "description": "Pull from the base: rebase if unpushed, merge if published; a semantic conflict stops.",
+      "gate": "G5 on a semantic conflict"
+    },
+    "aka": {
+      "alias": "push",
+      "aliasSource": "derived",
+      "group": "pr-side",
+      "description": "Push, yours to call: lint, squash the unpushed commits, catch up, push.",
+      "gate": "human-called phase"
+    },
+    "mukai": {
+      "alias": "open the PR",
+      "aliasSource": "derived",
+      "group": "pr-side",
+      "description": "The whole PR side in order: review, tests, coverage, evidence, one PR, then the offer of en.",
+      "gate": "human-called phase; ends at the merge prompt through en"
+    },
+    "murasaki": {
+      "alias": "catch up a published branch",
+      "aliasSource": "derived",
+      "group": "pr-side",
+      "description": "Bring a published branch up to date with its base and rerun the checks before any push.",
+      "gate": "none"
+    },
+    "hanten": {
+      "alias": "review",
+      "aliasSource": "derived",
+      "group": "pr-side",
+      "description": "Adversarial review before the PR: one reviewer per raised scope, every finding settled.",
+      "gate": "G5 on an unsettled finding"
+    },
+    "kotoamatsukami": {
+      "alias": "impacted tests",
+      "aliasSource": "derived",
+      "group": "pr-side",
+      "description": "The project-wide unit, UI and integration suites the change can affect.",
+      "gate": "G5 on red required tests"
+    },
+    "byakugan": {
+      "alias": "coverage",
+      "aliasSource": "D4",
+      "group": "pr-side",
+      "description": "Coverage capture and touched-file measurement against the declared ladder.",
+      "gate": "G5 under the coverage minimum"
+    },
+    "shibari": {
+      "alias": "PR body and open",
+      "aliasSource": "derived",
+      "group": "pr-side",
+      "description": "Compose the PR body from the section catalogue, check it, open one PR and request reviewers.",
+      "gate": "none"
+    },
+    "en": {
+      "alias": "readiness watch",
+      "aliasSource": "derived",
+      "group": "pr-side",
+      "description": "One PR from open to verified Ready and your merge prompt, under an acting-cycle cap.",
+      "gate": "G2 or G4 merge prompt"
+    },
+    "sharingan": {
+      "alias": "drive-to-ready",
+      "aliasSource": "D4",
+      "group": "pr-side",
+      "description": "Drive one PR to readiness at its gate and stop there; never merges, never votes.",
+      "gate": "G2 or G4"
+    },
+    "pr-state": {
+      "alias": "PR readiness",
+      "aliasSource": "derived",
+      "group": "pr-side",
+      "description": "One PR's readiness as the deterministic verdict, quoted conjunct by conjunct. Read-only.",
+      "gate": "none"
+    },
+    "third-hand": {
+      "alias": "harvest friction",
+      "aliasSource": "derived",
+      "group": "pr-side",
+      "description": "The sitting's process friction harvested into up to three issues you pick.",
+      "gate": "none"
+    },
+    "cleanup": {
+      "alias": "cleanup",
+      "aliasSource": "derived",
+      "group": "pr-side",
+      "description": "What a finished effort left behind, inventoried and removed only as you picked.",
+      "gate": "none"
+    },
+    "amenotejikara": {
+      "alias": "swap worktree",
+      "aliasSource": "derived",
+      "group": "pr-side",
+      "description": "Swap which worktree your core checkout holds, and swap back; never discards.",
+      "gate": "none"
+    },
+    "jujutsu": {
+      "alias": "pair a device",
+      "aliasSource": "derived",
+      "group": "pr-side",
+      "description": "Pair a device and register it as a launch target through a PR.",
+      "gate": "G5 on on-device steps"
+    },
+    "emperor-time": {
+      "alias": "intake",
+      "aliasSource": "D4",
+      "group": "backlog",
+      "description": "Product intake: one raw idea interviewed into a decision-complete brief, challenged, filed on your confirmation.",
+      "gate": "G1 epic approval"
+    },
+    "file": {
+      "alias": "file an issue",
+      "aliasSource": "derived",
+      "group": "backlog",
+      "description": "One well-formed, correctly labelled, non-duplicate issue.",
+      "gate": "none"
+    },
+    "classify": {
+      "alias": "classify",
+      "aliasSource": "derived",
+      "group": "backlog",
+      "description": "The two label axes, language and job, on an issue, a set, a backlog or an inline effort.",
+      "gate": "none"
+    },
+    "direct": {
+      "alias": "route to a model",
+      "aliasSource": "derived",
+      "group": "backlog",
+      "description": "Which model should do the work and where: three picks on five axes, read live.",
+      "gate": "none"
+    },
+    "build": {
+      "alias": "build an issue",
+      "aliasSource": "derived",
+      "group": "backlog",
+      "description": "One issue to a delivery PR standing at its human gate.",
+      "gate": "G2 or G4 merge prompt"
+    },
+    "futon": {
+      "alias": "work a backlog band",
+      "aliasSource": "derived",
+      "group": "backlog",
+      "description": "One selector of the backlog to PRs, then the typed next step once every PR is merged.",
+      "gate": "G2 per PR; the then step on your advance go"
+    },
+    "kazaana": {
+      "alias": "model-sweep",
+      "aliasSource": "D4",
+      "group": "backlog",
+      "description": "Everything this surface's model can build, delivered in parallel, then the release tag.",
+      "gate": "G2 per PR; G3 asked once after the tag"
+    },
+    "kage-bunshin": {
+      "alias": "parallel-build",
+      "aliasSource": "D4",
+      "group": "backlog",
+      "description": "A hand-picked list of issues, each to a PR at its gate, in order or in parallel.",
+      "gate": "G2 per PR"
+    },
+    "kamui": {
+      "alias": "spec and port",
+      "aliasSource": "derived",
+      "group": "backlog",
+      "description": "One issue or shipped PR written as the product family's spec, then port issues per sibling you pick.",
+      "gate": "G2 on the spec PR"
+    },
+    "dowsing-chain": {
+      "alias": "spec-capture",
+      "aliasSource": "D4",
+      "group": "backlog",
+      "description": "A product family's repositories read into one living spec, landed in waves.",
+      "gate": "G2 per wave"
+    },
+    "hiraishin": {
+      "alias": "port a PR",
+      "aliasSource": "derived",
+      "group": "backlog",
+      "description": "One merged PR ported to one sibling repository, spec first, built to the target's merge prompt.",
+      "gate": "G1 on the typed call; G2 on the port"
+    },
+    "backlog-loop": {
+      "alias": "backlog to zero",
+      "aliasSource": "derived",
+      "group": "backlog",
+      "description": "The backlog to zero in severity order, with release tags at batch boundaries.",
+      "gate": "G2 per PR"
+    },
+    "backlog-synthesis": {
+      "alias": "consolidate the backlog",
+      "aliasSource": "derived",
+      "group": "backlog",
+      "description": "A long backlog reconciled into a short one, behind a plan you approve.",
+      "gate": "plan approval"
+    },
+    "backlog-state": {
+      "alias": "backlog table",
+      "aliasSource": "derived",
+      "group": "backlog",
+      "description": "The backlog as one gate-oriented table. Read-only.",
+      "gate": "none"
+    },
+    "backlog-board": {
+      "alias": "gate board",
+      "aliasSource": "derived",
+      "group": "backlog",
+      "description": "The same sweep as a rendered board page. Read-only.",
+      "gate": "none"
+    },
+    "rikugan": {
+      "alias": "final report",
+      "aliasSource": "D4",
+      "group": "backlog",
+      "description": "The final state of a just-completed workflow as one page. Read-only.",
+      "gate": "none"
+    },
+    "senkei": {
+      "alias": "inventory efforts",
+      "aliasSource": "derived",
+      "group": "backlog",
+      "description": "A consumer repository's own efforts inventoried and classified, stuck PRs handed on.",
+      "gate": "none"
+    },
+    "black-voice": {
+      "alias": "ui-validate",
+      "aliasSource": "D4",
+      "group": "backlog",
+      "description": "Post-merge UI validation, on your call only.",
+      "gate": "none (after the gate)"
+    },
+    "izanagi": {
+      "alias": "repeat, acting",
+      "aliasSource": "derived",
+      "group": "backlog",
+      "description": "Repeat an acting task until a condition holds, under a mandatory cap.",
+      "gate": "none"
+    },
+    "izanami": {
+      "alias": "repeat, read-only",
+      "aliasSource": "derived",
+      "group": "backlog",
+      "description": "Repeat a read-only task until a condition holds.",
+      "gate": "none"
+    },
+    "tensho": {
+      "alias": "wip-to-pr",
+      "aliasSource": "D4",
+      "group": "backlog",
+      "description": "A dirty working copy into one PR standing at its gate.",
+      "gate": "G2 or G4"
+    },
+    "jujisho": {
+      "alias": "split-pr",
+      "aliasSource": "D4",
+      "group": "backlog",
+      "description": "A mixed working copy split into two stacked PRs by axis.",
+      "gate": "G2 or G4"
+    },
+    "susanoo": {
+      "alias": "package",
+      "aliasSource": "derived",
+      "group": "release-canon",
+      "description": "The distributable the lane declares, built locally; uploads nothing.",
+      "gate": "none"
+    },
+    "getsuga": {
+      "alias": "release",
+      "aliasSource": "D4",
+      "group": "release-canon",
+      "description": "The release tag end to end, with its own release-proposal PR.",
+      "gate": "human-called phase; the tag, never publication"
+    },
+    "kagutsuchi": {
+      "alias": "send a build",
+      "aliasSource": "derived",
+      "group": "release-canon",
+      "description": "A build to a declared non-production destination, behind a freshness gate.",
+      "gate": "human-called phase"
+    },
+    "mugetsu": {
+      "alias": "publish",
+      "aliasSource": "D4",
+      "group": "release-canon",
+      "description": "Publish one release to one production destination, on your own go only.",
+      "gate": "G3"
+    },
+    "tenkai": {
+      "alias": "adopt a repository",
+      "aliasSource": "derived",
+      "group": "release-canon",
+      "description": "Make a repository a working consumer, deterministically; diagnoses before it writes.",
+      "gate": "G2 on the adoption PRs"
+    },
+    "okiro": {
+      "alias": "new project",
+      "aliasSource": "derived",
+      "group": "release-canon",
+      "description": "Stand up a new Hatsu-first project in an empty directory from one confirmed plan.",
+      "gate": "plan confirmation"
+    },
+    "limbo": {
+      "alias": "canon mirror sync",
+      "aliasSource": "derived",
+      "group": "release-canon",
+      "description": "A consumer's canon mirror kept current on every declared surface.",
+      "gate": "G2"
+    },
+    "jusshin": {
+      "alias": "self-hosted runners",
+      "aliasSource": "derived",
+      "group": "release-canon",
+      "description": "A consumer's self-hosted runners raised and proven by a preflight job.",
+      "gate": "G5 on consent"
+    },
+    "kuchiyose": {
+      "alias": "install a CI tier",
+      "aliasSource": "derived",
+      "group": "release-canon",
+      "description": "A CI reviewers tier installed on an adopted consumer as one PR; Apps and secrets stay yours.",
+      "gate": "G2 on the install PR"
+    },
+    "great-hiker": {
+      "alias": "author canon",
+      "aliasSource": "derived",
+      "group": "release-canon",
+      "description": "Canon prose and machinery authored once and landed on every surface.",
+      "gate": "G4"
+    },
+    "bankai-handbooks": {
+      "alias": "resolve handbooks",
+      "aliasSource": "derived",
+      "group": "release-canon",
+      "description": "Which handbooks and rule-id prefixes govern a repository, read from the pinned canon.",
+      "gate": "none"
+    },
+    "bankai-quality": {
+      "alias": "resolve QA tooling",
+      "aliasSource": "derived",
+      "group": "release-canon",
+      "description": "Which QA and performance tooling a repository's scenario uses.",
+      "gate": "none"
+    },
+    "bankai-rule": {
+      "alias": "record a port ruling",
+      "aliasSource": "derived",
+      "group": "release-canon",
+      "description": "One port ruling recorded as a row in the handbooks' ports file, one PR per run.",
+      "gate": "G4"
+    }
+  },
+  "plainWordSkills": [
+    "file",
+    "build",
+    "direct",
+    "cleanup",
+    "classify",
+    "breath",
+    "limbo",
+    "en",
+    "ten",
+    "ao"
+  ],
+  "$plainWordSkills": "Code names that are also ordinary English words; the commercial-page check skips them because they occur in plain prose (and 'en' is the html lang attribute)."
 }

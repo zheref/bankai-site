@@ -9,7 +9,7 @@ Agents do the work. You hold the gates.
 - A Gatsby 5 (React, TypeScript) site: landing, docs (MDX), services, and a pricing page hidden behind a flag.
 - `src/brand/`: the brand as data (tokens, logo files, the positioning copy source). Revisions need no code change.
 - `site.config.ts`: every URL, label, flag and price; prices are tagged TBD until decided.
-- `src/data/names.json`: the one names map (code name, plain alias, one-line description) for every Hatsu skill and agent.
+- `src/data/names.json`: the one names map (code name, plain alias, one-line description) for every Hatsu skill and agent; the collector refuses to build when one is missing, and a unit test checks both directions.
 - `scripts/sources/`: the build-time readers of the three source repositories (hatsu, nen, bankai-handbooks) at the commits `sources.json` pins; `plugins/gatsby-source-bankai` turns the result into GraphQL. Versions, commands, skills, agents, verbs and changelogs are never typed by hand.
 - `nen/`: the Nen declarations that let Hatsu drive this repository (lanes: build, test, lint, coverage, ui-test).
 
@@ -39,7 +39,7 @@ A `gatsby build` prints one ` ERROR  UNKNOWN` block that is Node's `punycode` de
 ## Rules the site keeps
 
 - The Cloud tier has no name: copy says only the configured label. Internal codenames never appear; a test fails the build if they do.
-- Commercial pages (services, pricing) show plain aliases only. OSS and docs pages show the code name plus the alias.
+- Commercial pages (services, pricing) show plain language only: no character name and no skill code name (the build lane checks both). OSS and docs pages show the code name plus the alias.
 - The footer renders the disclaimer verbatim, full on wide screens and short where space is tight.
 - Customers always bring their own model API key. The maintainer's subscriptions are for building Bankai only.
 

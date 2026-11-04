@@ -7,7 +7,7 @@ vi.mock('gatsby', async () => {
   return {
     Link: ({ to, children, activeClassName: _a, ...rest }: { to: string; children: React.ReactNode; activeClassName?: string } & Record<string, unknown>) => React.createElement('a', { href: to, ...rest }, children),
     graphql: () => '',
-    useStaticQuery: () => { throw new Error('useStaticQuery must be mocked per test'); },
+    useStaticQuery: vi.fn(() => { throw new Error('useStaticQuery must be mocked per test'); }),
     navigate: vi.fn(),
   };
 });

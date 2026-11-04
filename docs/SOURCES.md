@@ -5,7 +5,7 @@ Every command, version, count, name and factual claim the site shows, with where
 | Repository | Commit | Version read | From |
 |---|---|---|---|
 | zheref/hatsu | `3c582c18a4a74119b748c76fbf2aa8ca275ef776` (origin/main) | plugin `0.159.0` | `.claude-plugin/plugin.json` |
-| zheref/nen | `d7a720ddcd5c482da8ab2f40ce678a51828cb7a8` (origin/main) | `0.29.0`, latest tag `v0.29.0` | `package.json`, `git tag` |
+| zheref/nen | `d7a720ddcd5c482da8ab2f40ce678a51828cb7a8` (origin/main) | `0.29.0`, latest tag `v0.29.0` | `package.json`; `git describe --tags --abbrev=0` in the checkout, refused when it disagrees with `sources.json` |
 | zheref/bankai-handbooks | `39b8e06d3c662977794a0bfb5c8ced48a18b91ab` (origin/main) | `v0.13` | `handbooks/VERSION` |
 
 ## Build-time reads (collector)
@@ -34,7 +34,7 @@ Every command, version, count, name and factual claim the site shows, with where
 | UX rules UX-1…UX-13 | bankai-handbooks `handbooks/ux-baseline.md` |
 | Changelog sections | each repository's `CHANGELOG.md`, the latest 12 `##` sections with a version in the heading |
 
-Internal codenames inside repository prose are replaced by the configured Cloud tier label; `src/data/generated/report.json` lists every replacement (20 at the pinned commits).
+Internal codenames inside repository prose are replaced by the configured Cloud tier label; `src/data/generated/report.json` lists every replacement by field and term, so the count is read there, never typed here.
 
 ## Copy (hand-written, cited)
 

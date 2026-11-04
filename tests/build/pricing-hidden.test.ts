@@ -1,14 +1,17 @@
 import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
+import { gzipSync } from 'node:zlib';
 import { resolve, join } from 'node:path';
 import { forbiddenPattern } from '../helpers/forbidden';
 import names from '../../src/data/names.json';
 
 const root = resolve(__dirname, '..', '..');
+/** Skill code names that are not ordinary English words: the ones a commercial page must not show. */
+const codeNames = Object.keys(names.skills).filter((k) => !names.plainWordSkills.includes(k));
 const pub = resolve(root, 'public');
 
 function build(env: Record<string, string>) {
-  execFileSync('pnpm', ['exec', 'gatsby', 'build'], { cwd: root, stdio: 'inherit', env: { ...process.env, NODE_ENV: 'production', GATSBY_TELEMETRY_DISABLED: '1', ...env } });
+  execFileSync('pnpm', ['build'], { cwd: root, stdio: 'inherit', shell: process.platform === 'win32', env: { ...process.env, NODE_ENV: 'production', GATSBY_TELEMETRY_DISABLED: '1', ...env } });
 }
 function walk(dir: string, out: string[] = []): string[] {
   for (const e of readdirSync(dir)) {
@@ -50,9 +53,23 @@ describe('production build (SHOW_PRICING unset)', () => {
       expect(page).toContain(short);
     }
   });
-  it('shows no character name on the commercial services page', () => {
-    const page = html('services/index.html').replace(/<script[\s\S]*?<\/script>/g, '');
+  it('shows no character name and no skill code name on the commercial services page', () => {
+    const page = html('services/index.html').replace(/<script[\s\S]*?<\/script>/g, '').replace(/<(?:header|footer)[\s\S]*?<\/(?:header|footer)>/g, '');
     for (const name of names.characterNames) expect(page.toLowerCase(), name).not.toMatch(new RegExp(`\\b${name}\\b`));
+    for (const name of codeNames) expect(page.toLowerCase(), name).not.toMatch(new RegExp(`\\b${name.replace(/-/g, '\\-')}\\b`));
+  });
+  it('ships no pricing-page chunk and no source map when SHOW_PRICING is unset (a clean build)', () => {
+    const files = readdirSync(pub);
+    expect(files.filter((f) => f.includes('pricing-page')), 'pricing chunks').toEqual([]);
+    expect(walk(pub).filter((p) => p.endsWith('.map')), 'source maps').toEqual([]);
+  });
+  it('keeps the landing JS under the 150 KB gzip budget (app + runtime + commons + the index chunk)', () => {
+    const stats = JSON.parse(readFileSync(resolve(pub, 'webpack.stats.json'), 'utf8')) as { assetsByChunkName: Record<string, string[]> };
+    const chunks = ['app', 'webpack-runtime', 'commons', 'component---src-pages-index-tsx'];
+    let total = 0;
+    for (const c of chunks) for (const a of stats.assetsByChunkName[c] ?? []) if (a.endsWith('.js')) total += gzipSync(readFileSync(resolve(pub, a))).length;
+    expect(total, 'landing JS gzip bytes').toBeGreaterThan(20_000);
+    expect(total, 'landing JS gzip bytes').toBeLessThan(150 * 1024);
   });
   it('renders the hero tagline and the sponsors and services sections with config values', () => {
     const page = html('index.html');
@@ -82,8 +99,9 @@ describe('preview build (SHOW_PRICING=true)', () => {
     const page = html('pricing/index.html');
     expect(page).toMatch(/<meta name="robots" content="noindex, nofollow"/);
     expect(page).toContain('Cloud tier');
-    const body = page.replace(/<script[\s\S]*?<\/script>/g, '');
+    const body = page.replace(/<script[\s\S]*?<\/script>/g, '').replace(/<(?:header|footer)[\s\S]*?<\/(?:header|footer)>/g, '');
     for (const name of names.characterNames) expect(body.toLowerCase(), name).not.toMatch(new RegExp(`\\b${name}\\b`));
+    for (const name of codeNames) expect(body.toLowerCase(), name).not.toMatch(new RegExp(`\\b${name.replace(/-/g, '\\-')}\\b`));
     expect(body.match(forbiddenPattern)).toBeNull();
   });
   it('still keeps the pricing path out of the sitemap and out of every nav and footer', () => {

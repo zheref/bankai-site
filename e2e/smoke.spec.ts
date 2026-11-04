@@ -65,7 +65,7 @@ test.describe('docs', () => {
     await expect(page.locator('[data-agent="nobunaga"]')).toContainText('Code Reviewer');
     await axeCheck(page, 'hatsu guide');
   });
-  test('services page passes axe and shows aliases only', async ({ page }) => {
+  test('services page renders its h1 and passes axe', async ({ page }) => {
     await page.goto('/services/');
     await expect(page.getByRole('heading', { level: 1 })).toContainText('Governed AI delivery setup');
     await axeCheck(page, 'services');

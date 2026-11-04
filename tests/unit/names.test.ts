@@ -5,7 +5,7 @@ type Hatsu = { skills: Array<{ name: string; inNamesMap: boolean; alias: string 
 const hatsu = generated<Hatsu>('hatsu.json');
 
 describe('names.json covers the hatsu repository', () => {
-  it('lists every skill directory the repository ships (a missing one fails the build)', () => {
+  it('lists every skill directory the repository ships (the collector refuses a build with one missing; this test checks CI)', () => {
     const missing = hatsu.skills.filter((s) => !(s.name in names.skills)).map((s) => s.name);
     expect(missing).toEqual([]);
   });

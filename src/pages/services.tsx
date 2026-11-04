@@ -5,8 +5,9 @@ import { Seo } from '@/features/shell/Seo';
 import { ServicesFragment } from '@/features/landing/ServicesFragment';
 import { SupportFragment } from '@/features/landing/SupportFragment';
 import { t } from '@/library/i18n';
+import { siteConfig } from '@config';
 
-/** The commercial page: aliases first, never a code name or a character name (tests/commercial-names.test.ts). */
+/** The commercial page: aliases first, never a code name or a character name (tests/build/pricing-hidden.test.ts). */
 const ServicesPage: React.FC<PageProps> = () => (
   <Layout>
     <ServicesFragment titleAs="h1" />
@@ -16,4 +17,4 @@ const ServicesPage: React.FC<PageProps> = () => (
 );
 
 export default ServicesPage;
-export const Head: HeadFC = () => <Seo title={t('services.title')} description={t('services.lead', 'en', { provider: 'ValleIA' })} pathname="/services/" />;
+export const Head: HeadFC = () => <Seo title={t('services.title')} description={t('services.lead', 'en', { provider: siteConfig.services.provider })} pathname="/services/" />;

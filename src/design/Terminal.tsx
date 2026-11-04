@@ -8,8 +8,8 @@ export type TermLine = { kind: 'cmd' | 'out' | 'note'; text: string; prompt?: st
  */
 export function Terminal({ lines, title = 'terminal', className = '' }: { lines: TermLine[]; title?: string; className?: string }) {
   return (
-    <div className={`min-w-0 max-w-full rounded-xl border border-line bg-terminal text-[#e6e9ef] shadow-2xl ${className}`} role="group" aria-label={title}>
-      <div className="flex items-center gap-2 border-b border-white/10 px-4 py-2 font-mono text-xs text-[#9aa4b2]">
+    <div className={`min-w-0 max-w-full rounded-xl border border-line bg-terminal text-terminal-text shadow-2xl ${className}`} role="group" aria-label={title}>
+      <div className="flex items-center gap-2 border-b border-white/10 px-4 py-2 font-mono text-xs text-terminal-muted">
         <span className="gate-square" aria-hidden="true" />
         <span>{title}</span>
       </div>
@@ -20,13 +20,13 @@ export function Terminal({ lines, title = 'terminal', className = '' }: { lines:
           if (line.kind === 'cmd') {
             return (
               <div key={i} className="term-line" style={style}>
-                <span className="text-[#22d3ee]" aria-hidden="true">{line.prompt ?? '$'} </span>
+                <span className="text-terminal-accent" aria-hidden="true">{line.prompt ?? '$'} </span>
                 <span className={`term-cmd ${last ? 'term-cursor' : ''}`} style={style}>{line.text}</span>
               </div>
             );
           }
           return (
-            <div key={i} className={`term-line ${line.kind === 'note' ? 'text-[#9aa4b2]' : ''} ${last ? 'term-cursor' : ''}`} style={style}>
+            <div key={i} className={`term-line ${line.kind === 'note' ? 'text-terminal-muted' : ''} ${last ? 'term-cursor' : ''}`} style={style}>
               {line.text}
             </div>
           );

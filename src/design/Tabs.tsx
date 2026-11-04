@@ -41,7 +41,7 @@ export function Tabs({ tabs, label, initial, className = '' }: { tabs: Tab[]; la
         })}
       </div>
       {tabs.map((tab) => (
-        <div key={tab.id} role="tabpanel" id={`panel-${tab.id}`} aria-labelledby={`tab-${tab.id}`} hidden={tab.id !== active} tabIndex={0} className="pt-6 focus-visible:outline-none">
+        <div key={tab.id} role="tabpanel" id={`panel-${tab.id}`} aria-labelledby={`tab-${tab.id}`} hidden={tab.id !== active} tabIndex={0} className="pt-6">
           {tab.id === active ? tab.content : null}
         </div>
       ))}

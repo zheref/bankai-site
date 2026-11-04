@@ -19,16 +19,18 @@ export function Snippet({ id, caption, showSource = false, className = '' }: { i
 }
 
 export function SnippetBlock({ code, html, source, caption, showSource = false, className = '' }: { code: string; html: string; source?: string; caption?: string; showSource?: boolean; className?: string }) {
-  const [copied, setCopied] = React.useState(false);
+  const [state, setState] = React.useState<'idle' | 'copied' | 'failed'>('idle');
   const copy = async () => {
-    try { await navigator.clipboard.writeText(code); setCopied(true); setTimeout(() => setCopied(false), 1500); } catch { /* clipboard unavailable */ }
+    try { await navigator.clipboard.writeText(code); setState('copied'); } catch { setState('failed'); }
+    setTimeout(() => setState('idle'), 2000);
   };
+  const label = state === 'copied' ? 'Copied' : state === 'failed' ? 'Copy failed: select the text' : 'Copy';
   return (
     <figure className={`snippet min-w-0 max-w-full ${className}`}>
       <div className="mb-1 flex items-center justify-between gap-3">
         {caption ? <figcaption className="font-mono text-xs uppercase tracking-wide text-muted">{caption}</figcaption> : <span />}
-        <button type="button" onClick={copy} aria-live="polite" className="min-h-9 rounded-md border border-line bg-surface px-2.5 font-mono text-xs text-text hover:border-accent">
-          {copied ? 'Copied' : 'Copy'}
+        <button type="button" onClick={copy} aria-live="polite" className="min-h-11 min-w-11 rounded-md border border-line bg-surface px-3 font-mono text-xs text-text hover:border-accent">
+          {label}
         </button>
       </div>
       <div className="snippet-body min-w-0" dangerouslySetInnerHTML={{ __html: html }} />

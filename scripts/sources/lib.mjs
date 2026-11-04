@@ -118,13 +118,67 @@ export function codeBlocks(text) {
 }
 
 /** A tiny inline-markdown → HTML converter for table cells and one-line descriptions: code, bold, italic, links (kept as text with href). */
+export const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+
+/** An href the site will emit: an absolute http(s) URL that parses, re-serialised by the URL parser (so no quote, space or control character survives); anything else drops to plain text. */
+export function safeHref(raw) {
+  const candidate = raw.replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, '&');
+  if (/[\s"'<>]/.test(candidate)) return null;
+  try {
+    const u = new URL(candidate);
+    if (u.protocol !== 'https:' && u.protocol !== 'http:') return null;
+    return u.href;
+  } catch {
+    return null;
+  }
+}
+
 export function inlineHtml(md) {
-  const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   let s = esc(md);
   s = s.replace(/`([^`]+)`/g, (_, c) => `<code>${c}</code>`);
   s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
   s = s.replace(/(^|[^*])\*([^*\n]+)\*/g, '$1<em>$2</em>');
-  s = s.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, t, href) => (/^https?:/.test(href) ? `<a href="${href}" rel="noopener">${t}</a>` : t));
+  s = s.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, t, href) => { const h = safeHref(href); return h ? `<a href="${esc(h)}" rel="noopener">${t}</a>` : t; });
   s = s.replace(/&lt;br\/?&gt;/g, '<br/>');
   return s;
+}
+
+/** The codenames that never reach the site, and what each becomes. A lowercase hit is an identifier (a path, a label, a trailer key) and gets a slug; prose gets the public label. */
+export const FORBIDDEN_TERMS = ['Akatsuki-Agent', 'Akatsuki-AI', 'Akatsuki', 'Bankai Cloud', 'rlaope'];
+export function redact(text, where, report, label = 'Cloud tier') {
+  if (typeof text !== 'string') return text;
+  let out = text;
+  for (const term of FORBIDDEN_TERMS) {
+    const re = new RegExp(term.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&'), 'gi');
+    const n = (out.match(re) || []).length;
+    if (n) {
+      report.redactions.push({ where, term, count: n });
+      out = out.replace(re, (hit) => (term === 'rlaope' ? 'another project' : term === 'Akatsuki-Agent' ? 'CI-Agent' : hit === hit.toLowerCase() ? label.toLowerCase().replace(/\s+/g, '-') : label));
+    }
+  }
+  return out;
+}
+export const deepRedact = (v, where, report, label) =>
+  typeof v === 'string' ? redact(v, where, report, label) : Array.isArray(v) ? v.map((x, i) => deepRedact(x, `${where}[${i}]`, report, label)) : v && typeof v === 'object' ? Object.fromEntries(Object.entries(v).map(([k, x]) => [k, deepRedact(x, `${where}.${k}`, report, label)])) : v;
+
+/** Binds one source checkout: refuses a missing checkout, and a drifted one unless allowDrift (then the drift is a recorded warning). */
+export function bind(name, dir, pinned, report, { allowDrift = false } = {}) {
+  const head = headOf(dir);
+  if (!head) throw new Error(`${name}: no git checkout at ${dir}. Run \`pnpm sources:fetch\` or set BANKAI_SOURCE_${name.toUpperCase()}.`);
+  if (head !== pinned) {
+    const msg = `${name}: checkout ${dir} is at ${head.slice(0, 12)}, sources.json pins ${pinned.slice(0, 12)}`;
+    if (!allowDrift) throw new Error(`${msg}. Re-pin sources.json or run \`pnpm sources:fetch\`.`);
+    report.warnings.push(msg);
+  }
+  report.repos[name] = { dir, head, pinned };
+  return head;
+}
+
+/** The newest reachable tag of a checkout, or null when there is none. */
+export function latestTagOf(dir) {
+  try {
+    return execFileSync('git', ['describe', '--tags', '--abbrev=0'], { cwd: dir, stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim() || null;
+  } catch {
+    return null;
+  }
 }

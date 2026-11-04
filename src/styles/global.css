@@ -12,9 +12,13 @@
   --color-ai: var(--bk-ai-accent);
   --color-on-accent: var(--bk-on-accent);
   --color-disclaimer: var(--bk-disclaimer);
+  --color-terminal-text: var(--bk-terminal-text);
+  --color-terminal-muted: var(--bk-terminal-muted);
+  --color-terminal-accent: var(--bk-terminal-accent);
+  --color-input-border: var(--bk-input-border);
   --color-line: color-mix(in srgb, var(--bk-text) 14%, transparent);
-  --font-display: 'Space Grotesk Variable', 'Space Grotesk', system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-display: 'Space Grotesk Variable', 'Space Grotesk', 'Space Grotesk Fallback', Arial, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono Variable', 'JetBrains Mono', 'JetBrains Mono Fallback', 'Courier New', ui-monospace, monospace;
   --radius-gate: 3px;
   --breakpoint-xs: 360px;
 }
@@ -50,7 +54,7 @@
   .prose-site a { color: var(--bk-accent); text-decoration: underline; }
   .prose-site code { background: color-mix(in srgb, var(--bk-text) 8%, transparent); padding: 0.1em 0.35em; border-radius: 4px; }
   .prose-site pre code { background: none; padding: 0; }
-  .prose-site pre { background: var(--bk-terminal); color: #e6e9ef; padding: 1rem; border-radius: 0.5rem; overflow-x: auto; font-size: 0.875rem; line-height: 1.55; margin-bottom: 1rem; }
+  .prose-site pre { background: var(--bk-terminal); color: var(--bk-terminal-text); padding: 1rem; border-radius: 0.5rem; overflow-x: auto; font-size: 0.875rem; line-height: 1.55; margin-bottom: 1rem; }
   .prose-site pre:focus-visible, .table-scroll:focus-visible, .snippet pre:focus-visible { outline: 3px solid var(--bk-accent); outline-offset: 2px; }
   .prose-site table { width: 100%; border-collapse: collapse; font-size: 0.925rem; }
   .prose-site th, .prose-site td { text-align: left; padding: 0.5rem 0.75rem; border-bottom: 1px solid var(--color-line); vertical-align: top; }
@@ -77,7 +81,8 @@
 /* The hero terminal: CSS-only typing. Each line sets --i (its order) and --n (characters); reduced motion shows everything at once. */
 .term-line { opacity: 0; animation: term-show 0.01s linear forwards; animation-delay: calc(var(--i) * 0.9s); }
 .term-cmd { display: inline-block; overflow: hidden; white-space: nowrap; vertical-align: bottom; width: 0; animation: term-type 0.8s steps(var(--n)) forwards; animation-delay: calc(var(--i) * 0.9s); }
-.term-cursor::after { content: ''; display: inline-block; width: 0.6ch; height: 1.1em; background: var(--bk-accent); border-radius: var(--radius-gate); vertical-align: text-bottom; margin-left: 0.2ch; animation: term-blink 1s steps(2) infinite; }
+/* The cursor blinks a few times after its line lands, then holds (WCAG 2.2.2: nothing blinks past five seconds). */
+.term-cursor::after { content: ''; display: inline-block; width: 0.6ch; height: 1.1em; background: var(--bk-terminal-accent); border-radius: var(--radius-gate); vertical-align: text-bottom; margin-left: 0.2ch; animation: term-blink 1s steps(2) 4; animation-delay: calc(var(--i) * 0.9s + 0.8s); }
 @keyframes term-show { to { opacity: 1; } }
 @keyframes term-type { to { width: calc(var(--n) * 1ch); } }
 @keyframes term-blink { 50% { opacity: 0; } }

@@ -13,53 +13,40 @@
  */
 import { mkdirSync, readdirSync, writeFileSync, existsSync, readFileSync } from 'node:fs';
 import { resolve, basename } from 'node:path';
+import { execFileSync } from 'node:child_process';
 import { createHighlighter } from 'shiki';
 import {
-  readSources, repoDir, headOf, read, frontmatter, section, tables, strip, codeBlocks, inlineHtml, generatedDir, siteRoot,
+  readSources, repoDir, read, frontmatter, section, tables, strip, codeBlocks, inlineHtml, generatedDir, siteRoot,
+  deepRedact, bind as bindCheckout, latestTagOf,
 } from './lib.mjs';
 
 const sources = readSources();
 const names = JSON.parse(readFileSync(resolve(siteRoot, 'src/data/names.json'), 'utf8'));
 const tokens = JSON.parse(readFileSync(resolve(siteRoot, 'src/brand/tokens.json'), 'utf8'));
-const forbidden = ['Akatsuki-Agent', 'Akatsuki-AI', 'Akatsuki', 'Bankai Cloud', 'rlaope'];
 const CLOUD_LABEL = process.env.BANKAI_CLOUD_LABEL || 'Cloud tier';
+const allowDrift = process.env.BANKAI_SOURCES_ALLOW_DRIFT === '1';
 const report = { readAt: sources.readAt, generatedAt: new Date().toISOString(), repos: {}, redactions: [], warnings: [] };
 
-/** Internal codenames never reach the site: replace each with the public label and record it. */
-function redact(text, where) {
-  if (typeof text !== 'string') return text;
-  let out = text;
-  for (const term of forbidden) {
-    const re = new RegExp(term.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&'), 'gi');
-    const n = (out.match(re) || []).length;
-    if (n) {
-      report.redactions.push({ where, term, count: n });
-      // Case-aware: a lowercase hit is an identifier (a path, a label, a trailer key) and gets a slug; prose gets the public label.
-      out = out.replace(re, (hit) => (term === 'rlaope' ? 'another project' : term === 'Akatsuki-Agent' ? 'CI-Agent' : hit === hit.toLowerCase() ? CLOUD_LABEL.toLowerCase().replace(/\s+/g, '-') : CLOUD_LABEL));
-    }
-  }
-  return out;
-}
-const deepRedact = (v, where) =>
-  typeof v === 'string' ? redact(v, where) : Array.isArray(v) ? v.map((x, i) => deepRedact(x, `${where}[${i}]`)) : v && typeof v === 'object' ? Object.fromEntries(Object.entries(v).map(([k, x]) => [k, deepRedact(x, `${where}.${k}`)])) : v;
-
+/** A missing checkout is fetched at its pin first (a fresh CI runner), never silently skipped; an override path is the caller's. */
 function bind(name) {
   const dir = repoDir(name);
-  const pinned = sources.repos[name].commit;
-  const head = headOf(dir);
-  if (!head) throw new Error(`${name}: no git checkout at ${dir}. Run \`pnpm sources:fetch\` or set BANKAI_SOURCE_${name.toUpperCase()}.`);
-  if (head !== pinned) {
-    const msg = `${name}: checkout ${dir} is at ${head.slice(0, 12)}, sources.json pins ${pinned.slice(0, 12)}`;
-    if (process.env.BANKAI_SOURCES_ALLOW_DRIFT !== '1') throw new Error(`${msg}. Re-pin sources.json or run \`pnpm sources:fetch\`.`);
-    report.warnings.push(msg);
+  if (!existsSync(resolve(dir, '.git')) && !process.env[`BANKAI_SOURCE_${name.toUpperCase()}`]) {
+    execFileSync(process.execPath, [resolve(siteRoot, 'scripts/sources/fetch.mjs'), name], { stdio: 'inherit' });
   }
-  report.repos[name] = { dir, head, pinned, url: sources.repos[name].url };
+  bindCheckout(name, dir, sources.repos[name].commit, report, { allowDrift });
+  report.repos[name].url = sources.repos[name].url;
   return dir;
+}
+
+/** Every table the site renders must parse to rows: an empty section is a changed upstream heading, never an empty page. */
+function nonEmpty(label, rows) {
+  if (!rows || rows.length === 0) throw new Error(`${label}: parsed to zero rows at the pinned commit; the upstream heading or table moved. Fix the reader before building.`);
+  return rows;
 }
 
 const write = (file, data) => {
   mkdirSync(generatedDir, { recursive: true });
-  writeFileSync(resolve(generatedDir, file), JSON.stringify(deepRedact(data, file), null, 2) + '\n');
+  writeFileSync(resolve(generatedDir, file), JSON.stringify(deepRedact(data, file, report, CLOUD_LABEL), null, 2) + '\n');
 };
 
 // ---------------------------------------------------------------- hatsu
@@ -87,7 +74,7 @@ const groupHeadings = [
 const readmeRows = {};
 for (const [group, heading] of groupHeadings) {
   const sec = section(skillsSection, heading, 3);
-  if (!sec) { report.warnings.push(`hatsu README: no skills section '${heading}'`); continue; }
+  if (!sec) throw new Error(`hatsu README: no skills section '${heading}' under § The skills; the reader must be updated before building.`);
   for (const t of tables(sec)) {
     for (const r of t.rows) {
       const key = strip(r[0]).replace(/^\//, '');
@@ -142,6 +129,7 @@ const agents = agentFiles.map((name) => {
 
 // Quickstart table: one column per surface.
 const qs = tables(section(readme, 'Quickstart', 2) || '')[0];
+nonEmpty('hatsu README § Quickstart', qs?.rows);
 const surfaces = ['claude-code', 'codex', 'cursor', 'antigravity'];
 const surfaceTitles = qs ? qs.header.slice(1).map(strip) : [];
 const quickstart = surfaces.map((id, i) => {
@@ -155,12 +143,12 @@ const quickstart = surfaces.map((id, i) => {
   return { id, title: surfaceTitles[i] ?? id, rows, facts, guide: `docs/using/${id}.md`, setupBlocks: blocks.slice(0, 2), usageBlock: codeBlocks(section(guide, 'Usage', 2) || '')[0] ?? null };
 });
 
-const gates = (tables(section(readme, 'The gates', 2) || '')[0]?.rows ?? []).map((r) => ({ gate: strip(r[0]), clause: strip(r[1]), whatHtml: inlineHtml(r[2]), delegableHtml: inlineHtml(r[3]) }));
-const tiers = (tables(section(readme, 'Models and surfaces', 2) || '')[0]?.rows ?? []).map((r) => ({ tier: strip(r[0]), role: inlineHtml(r[1]), claudeCode: strip(r[2]), codex: strip(r[3]), cursor: strip(r[4]), antigravity: strip(r[5]) }));
-const humanPhases = (tables(section(read(hatsu, 'docs/WORKFLOW.md'), 'The phases, and which of them a human calls', 2) || '')[0]?.rows ?? []).map((r) => ({ phase: strip(r[0]), whatHtml: inlineHtml(r[1]), whyHtml: inlineHtml(r[2]) }));
+const gates = nonEmpty('hatsu README § The gates', tables(section(readme, 'The gates', 2) || '')[0]?.rows).map((r) => ({ gate: strip(r[0]), clause: strip(r[1]), whatHtml: inlineHtml(r[2]), delegableHtml: inlineHtml(r[3]) }));
+const tiers = nonEmpty('hatsu README § Models and surfaces', tables(section(readme, 'Models and surfaces', 2) || '')[0]?.rows).map((r) => ({ tier: strip(r[0]), role: inlineHtml(r[1]), claudeCode: strip(r[2]), codex: strip(r[3]), cursor: strip(r[4]), antigravity: strip(r[5]) }));
+const humanPhases = nonEmpty('hatsu WORKFLOW § 4 phases', tables(section(read(hatsu, 'docs/WORKFLOW.md'), 'The phases, and which of them a human calls', 2) || '')[0]?.rows).map((r) => ({ phase: strip(r[0]), whatHtml: inlineHtml(r[1]), whyHtml: inlineHtml(r[2]) }));
 const profiles = workflow.profile ?? null;
-const profilesTable = (tables(section(read(hatsu, 'docs/WORKFLOW.md'), 'profile', 3) || '')[0]?.rows ?? []).map((r) => ({ profile: strip(r[0]), perTurnHtml: inlineHtml(r[1]), deferredHtml: inlineHtml(r[2]), report: strip(r[3]) }));
-const configFiles = (tables(section(read(hatsu, 'docs/config/README.md'), 'The files', 2) || '')[0]?.rows ?? []).map((r) => ({ file: strip(r[0]), livesIn: inlineHtml(r[1]), decidesHtml: inlineHtml(r[2]), page: strip(r[3]) }));
+const profilesTable = nonEmpty('hatsu WORKFLOW § profile', tables(section(read(hatsu, 'docs/WORKFLOW.md'), 'profile', 3) || '')[0]?.rows).map((r) => ({ profile: strip(r[0]), perTurnHtml: inlineHtml(r[1]), deferredHtml: inlineHtml(r[2]), report: strip(r[3]) }));
+const configFiles = nonEmpty('hatsu docs/config/README § The files', tables(section(read(hatsu, 'docs/config/README.md'), 'The files', 2) || '')[0]?.rows).map((r) => ({ file: strip(r[0]), livesIn: inlineHtml(r[1]), decidesHtml: inlineHtml(r[2]), page: strip(r[3]) }));
 const nenDependency = {
   minimum: contract.dependency.minimum, pinnedRef: contract.dependency.pinned_ref, source: contract.dependency.source,
   bootstrap: contract.dependency.bootstrap ? { url: contract.dependency.bootstrap.url ?? null, scriptSha256: contract.dependency.bootstrap.scriptSha256 ?? null } : null,
@@ -168,6 +156,8 @@ const nenDependency = {
 };
 const contractSummary = { file: 'nen/contract.json', keys: Object.keys(contract), dependencyKeys: Object.keys(contract.dependency), projectLanes: Object.keys(contract.project?.lanes ?? {}) };
 
+const unmapped = [...skills.filter((x) => !x.inNamesMap).map((x) => `skill ${x.name}`), ...agents.filter((x) => !x.inNamesMap).map((x) => `agent ${x.name}`)];
+if (unmapped.length) throw new Error(`src/data/names.json lacks ${unmapped.join(', ')}: every skill and agent in the hatsu repository needs a code name, alias and description before the site builds.`);
 write('hatsu.json', {
   version: plugin.version, name: plugin.name, displayName: plugin.displayName, description: plugin.description, repository: plugin.repository,
   skillCount: skills.length, agentCount: agents.length, commit: report.repos.hatsu.head, readAt: sources.readAt,
@@ -176,11 +166,18 @@ write('hatsu.json', {
 
 // ---------------------------------------------------------------- nen
 const nen = bind('nen');
+const nenLatestTag = latestTagOf(nen);
+if (!nenLatestTag) throw new Error('nen: no reachable tag in the checkout; the latest release cannot be read');
+if (nenLatestTag.replace(/^v/, '') !== sources.repos.nen.version.replace(/^v/, '')) {
+  const msg = `nen: latest reachable tag ${nenLatestTag} differs from sources.json version ${sources.repos.nen.version}`;
+  if (!allowDrift) throw new Error(`${msg}. Update sources.json.`);
+  report.warnings.push(msg);
+}
 const nenPkg = JSON.parse(read(nen, 'package.json'));
 const nenReadme = read(nen, 'README.md');
 const usage = read(nen, 'docs/USAGE.md');
 const verbIndex = tables(section(usage, 'Verb index', 2) || '')[0];
-const verbs = (verbIndex?.rows ?? []).map((r) => ({ family: strip(r[0]), verb: strip(r[1]), purposeHtml: inlineHtml(r[2]), readsHtml: inlineHtml(r[3]), json: strip(r[4]) }));
+const verbs = nonEmpty('nen USAGE § Verb index', verbIndex?.rows).map((r) => ({ family: strip(r[0]), verb: strip(r[1]), purposeHtml: inlineHtml(r[2]), readsHtml: inlineHtml(r[3]), json: strip(r[4]) }));
 const verbSections = {};
 for (const m of usage.matchAll(/^### `(nen [^`]+)`\s*$/gm)) {
   const start = m.index + m[0].length;
@@ -194,7 +191,7 @@ const installBlocks = codeBlocks(section(nenReadme, 'Install', 2) || '');
 const dayToDayInstall = codeBlocks(section(nenReadme, 'Install', 3) || '');
 write('nen.json', {
   version: nenPkg.version, description: nenPkg.description, license: nenPkg.license, commit: report.repos.nen.head, readAt: sources.readAt,
-  latestTag: sources.repos.nen.version, packageName: nenPkg.name,
+  latestTag: nenLatestTag, packageName: nenPkg.name,
   verbCount: verbs.length, verbs: verbs.map((v) => ({ ...v, ...(verbSections[v.verb] ?? {}) })),
   families: [...new Set(verbs.map((v) => v.family))],
   install: { blocks: installBlocks, dayToDay: dayToDayInstall, targets: ['linux-x64', 'darwin-arm64', 'windows-x64'] },
@@ -206,9 +203,9 @@ const hb = bind('handbooks');
 const hbReadme = read(hb, 'README.md');
 const hbVersion = read(hb, 'handbooks/VERSION').trim();
 const familyTable = tables(hbReadme)[0];
-const families = (familyTable?.rows ?? []).map((r) => ({ family: strip(r[0]), where: strip(r[1]), prefix: strip(r[2]) }));
+const families = nonEmpty('handbooks README families table', familyTable?.rows).map((r) => ({ family: strip(r[0]), where: strip(r[1]), prefix: strip(r[2]) }));
 const ux = read(hb, 'handbooks/ux-baseline.md');
-const uxRules = [...ux.matchAll(/^\*\*(UX-\d+) — ([^*]+)\*\*/gm)].map((m) => ({ id: m[1], title: m[2].trim().replace(/\.$/, '') }));
+const uxRules = nonEmpty('handbooks ux-baseline UX rules', [...ux.matchAll(/^\*\*(UX-\d+) — ([^*]+)\*\*/gm)].map((m) => ({ id: m[1], title: m[2].trim().replace(/\.$/, '') })));
 const stacks = families.filter((f) => /stack/i.test(f.family)).map((f) => ({ ...f }));
 write('handbooks.json', { version: hbVersion, commit: report.repos.handbooks.head, readAt: sources.readAt, families, stacks, uxRules });
 
@@ -258,5 +255,6 @@ css.push(`@media (prefers-color-scheme: light) {\n  :root:not([data-theme]) {\n$
 mkdirSync(resolve(siteRoot, 'src/styles'), { recursive: true });
 writeFileSync(resolve(siteRoot, 'src/styles/tokens.generated.css'), css.join('\n\n') + '\n');
 
-write('report.json', report);
+if (report.warnings.length && !allowDrift) throw new Error(`collect: ${report.warnings.length} warning(s) would be silent: ${report.warnings.join('; ')}`);
+writeFileSync(resolve(generatedDir, 'report.json'), JSON.stringify(report, null, 2) + '\n');
 console.log(`collected: hatsu ${plugin.version} (${skills.length} skills, ${agents.length} agents), nen ${nenPkg.version} (${verbs.length} verbs), handbooks ${hbVersion}; ${report.redactions.length} redactions, ${report.warnings.length} warnings`);

@@ -29,12 +29,12 @@ export function ServicesFragment({ titleAs = 'h2' as const }: { titleAs?: 'h1' |
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
           <H className="text-lg font-semibold">{t('services.setupTitle')}</H>
-          <p className="mt-2 text-sm text-muted">{t('services.setupText')}</p>
+          <p className="mt-2 text-base text-muted">{t('services.setupText')}</p>
           <Price from={s.setup.from} to={s.setup.to} />
         </Card>
         <Card>
           <H className="text-lg font-semibold">{t('services.careTitle')}</H>
-          <p className="mt-2 text-sm text-muted">{t('services.careText')}</p>
+          <p className="mt-2 text-base text-muted">{t('services.careText')}</p>
           <Price from={s.carePlanMonthly.from} to={s.carePlanMonthly.to} suffix={t('services.perMonth')} />
         </Card>
       </div>

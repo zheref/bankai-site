@@ -37,7 +37,10 @@
           "argv": [
             "test:coverage"
           ],
-          "$comment": "vitest --coverage (v8), reports under coverage/"
+          "$comment": "vitest --coverage (v8); lcov.info is the report nen parses, json-summary beside it",
+          "artifacts": [
+            "coverage/lcov.info"
+          ]
         },
         "ui-test": {
           "exe": "pnpm",
@@ -86,6 +89,15 @@
         "installer": "verify-only",
         "why": "package.json packageManager pins pnpm 10"
       }
+    },
+    "preconditions": {
+      "gatsby": [
+        {
+          "kind": "path",
+          "value": "node_modules/gatsby/package.json",
+          "why": "Install locked dependencies with `pnpm install --frozen-lockfile` first: every verb on this lane is a pnpm script. The source repositories the build reads are fetched by `prebuild` (scripts/sources/collect.mjs) at the commits sources.json pins when absent."
+        }
+      ]
     }
   }
 }

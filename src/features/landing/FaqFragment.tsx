@@ -11,10 +11,10 @@ export function FaqFragment() {
         {ITEMS.map((k) => (
           <details key={k} className="surface group p-4 open:border-accent">
             <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 font-semibold marker:content-none">
-              <h3 className="text-base font-semibold">{t(`faq.items.${k}.q`)}</h3>
+              <span className="text-base font-semibold">{t(`faq.items.${k}.q`)}</span>
               <span aria-hidden="true" className="font-mono text-accent transition-transform group-open:rotate-45 motion-reduce:transition-none">+</span>
             </summary>
-            <p className="mt-2 text-sm text-muted">{t(`faq.items.${k}.a`)}</p>
+            <p className="mt-2 text-base text-muted">{t(`faq.items.${k}.a`)}</p>
           </details>
         ))}
       </div>
