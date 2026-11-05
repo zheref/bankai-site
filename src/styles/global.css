@@ -17,8 +17,8 @@
   --color-terminal-accent: var(--bk-terminal-accent);
   --color-input-border: var(--bk-input-border);
   --color-line: color-mix(in srgb, var(--bk-text) 14%, transparent);
-  --font-display: 'Space Grotesk Variable', 'Space Grotesk', 'Space Grotesk Fallback', Arial, system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono Variable', 'JetBrains Mono', 'JetBrains Mono Fallback', 'Courier New', ui-monospace, monospace;
+  --font-display: 'Space Grotesk Variable', 'Space Grotesk', 'Space Grotesk Fallback', 'Space Grotesk Fallback DejaVu', Arial, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono Variable', 'JetBrains Mono', 'JetBrains Mono Fallback', 'JetBrains Mono Fallback DejaVu', 'Courier New', ui-monospace, monospace;
   --radius-gate: 3px;
   --breakpoint-xs: 360px;
 }
