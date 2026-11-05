@@ -26,7 +26,7 @@ jobs:
           node-version: 20
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - name: source repositories at the pinned commits
+      - name: source repositories at the pinned commits (tests and builds collect from them; a missing checkout is fetched by the collector too)
         run: pnpm sources:fetch
       - name: unit tests with coverage
         run: pnpm test:coverage

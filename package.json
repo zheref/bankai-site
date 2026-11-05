@@ -25,7 +25,9 @@
     "test:build": "vitest run --config vitest.build.config.ts",
     "test:e2e": "playwright test",
     "test:ui": "playwright test",
-    "build:incremental": "gatsby build"
+    "build:incremental": "gatsby build",
+    "pretest": "node scripts/sources/collect.mjs",
+    "pretest:coverage": "node scripts/sources/collect.mjs"
   },
   "dependencies": {
     "@fontsource-variable/jetbrains-mono": "5.3.0",

@@ -1,0 +1,34 @@
+{
+  "version": 1,
+  "$comment": "Readiness gate for zheref/bankai-site (declared 2026-11-04 on the first delivery PR). Copilot supplies the sole automated review round, as in zheref/hatsu: approval_policy review-round-only makes the empty approval set legal and deliberate; the maintainer's human merge decision stays outside this verdict (G2). The entry is kind bot so nen/workflow.json \u2192 aiReviewers optional waives the round mechanically once this file is at the PR base and the default branch tip (nen 0.26+, HR-333); it binds on the PR that adds it.",
+  "reviewers": [
+    {
+      "name": "copilot",
+      "kind": "bot",
+      "login_pattern": {
+        "pattern": "^(copilot|copilot-pull-request-reviewer(\\[bot\\])?)$",
+        "ignoreCase": true
+      }
+    }
+  ],
+  "approval_policy": "review-round-only",
+  "default_approvers": [],
+  "base_reviewers": [
+    "copilot"
+  ],
+  "delivery": {
+    "$comment": "A delivery PR: authored by the maintainer's credentials on a {model}/{persona}/{descriptor} branch (nen/workflow.json branch.template), the model alias prefixes the Claude Code surface uses.",
+    "author_pattern": {
+      "pattern": "^zheref$",
+      "ignoreCase": true
+    },
+    "head_ref_prefixes": [
+      "fable/",
+      "opus/",
+      "sonnet/",
+      "haiku/"
+    ],
+    "labels": []
+  },
+  "checks": {}
+}

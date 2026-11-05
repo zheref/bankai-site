@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Clone the three source repositories into .sources/<name> at exactly the
- * commits sources.json pins. Idempotent: an existing checkout is fetched and
+ * commits sources.json pins (blobless clones with tags, so the newest tag is readable). Idempotent: an existing checkout is fetched and
  * reset to the pinned commit. Nothing is written anywhere else.
  *
  *   node scripts/sources/fetch.mjs            # all three
@@ -23,7 +23,9 @@ for (const [name, repo] of Object.entries(sources.repos)) {
   if (!existsSync(dir)) {
     execFileSync('git', ['clone', '--filter=blob:none', '--no-checkout', repo.url, dir], { stdio: 'inherit' });
   }
-  git(['fetch', '--depth', '1', 'origin', repo.commit]);
+  // Blobless, not shallow: `git describe --tags` needs the ancestry between the pinned commit and the newest tag (the collector refuses a checkout with no reachable tag).
+  git(['fetch', '--filter=blob:none', 'origin', repo.commit]);
+  git(['fetch', '--filter=blob:none', '--tags', 'origin']);
   git(['checkout', '--detach', '--force', repo.commit]);
   const head = git(['rev-parse', 'HEAD']);
   if (head !== repo.commit) throw new Error(`${name}: HEAD ${head} is not the pinned ${repo.commit}`);
