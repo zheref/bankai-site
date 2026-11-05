@@ -44,6 +44,9 @@ describe('docs data components', () => {
     expect(screen.getAllByText(/^UX-1$/).length).toBe(1);
     expect(screen.getByTestId('changelog-hatsu').querySelectorAll('section').length).toBeGreaterThan(3);
     expect(screen.getByTestId('changelog-nen')).toHaveTextContent('v0.29.0');
+    const { unmount } = render(<Docs><Changelog repo="handbooks" /></Docs>);
+    expect(screen.getByTestId('changelog-handbooks').querySelectorAll('section').length).toBeGreaterThan(0);
+    unmount();
   });
   it('renders the versions, the pin and the source stamp, and a Name with a proposed rename', () => {
     const { container } = render(<Docs><><Versions /><NenPin /><SourceStamp /><Name code="shibari" alias="PR body and open" proposed="musubi" /></></Docs>);

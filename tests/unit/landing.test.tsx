@@ -145,6 +145,7 @@ describe('Layout and pages', () => {
     render(<Layout><p>body</p></Layout>);
     expect(screen.getByText('Skip to content')).toHaveAttribute('href', '#main');
     expect(screen.getByRole('main')).toHaveTextContent('body');
+    expect(document.querySelectorAll('#main')).toHaveLength(1);
     expect(screen.getByText(/hatsu 0\.\d+\.\d+ · nen 0\.\d+\.\d+/)).toBeInTheDocument();
   });
   it('renders the landing page with every section id the nav and the screenshots use', () => {

@@ -212,7 +212,10 @@ write('handbooks.json', { version: hbVersion, commit: report.repos.handbooks.hea
 // ---------------------------------------------------------------- changelogs
 function changelog(text, repo, limit = 12) {
   const out = [];
-  const re = /^## (.+)$/gm;
+  // Release headings sit at ## in hatsu and nen and at ### in the handbooks: the level is the first heading carrying a version.
+  const first = text.match(/^(#{2,3}) .*v?\d+\.\d+(\.\d+)?/m);
+  const level = first ? first[1] : '##';
+  const re = new RegExp(`^${level} (.+)$`, 'gm');
   const heads = [...text.matchAll(re)];
   for (let i = 0; i < heads.length && out.length < limit; i++) {
     const h = heads[i];
@@ -226,7 +229,9 @@ function changelog(text, repo, limit = 12) {
   }
   return out;
 }
-write('changelog.json', { entries: [...changelog(read(hatsu, 'CHANGELOG.md'), 'hatsu'), ...changelog(read(nen, 'CHANGELOG.md'), 'nen'), ...changelog(read(hb, 'CHANGELOG.md'), 'handbooks')] });
+const changelogEntries = { hatsu: changelog(read(hatsu, 'CHANGELOG.md'), 'hatsu'), nen: changelog(read(nen, 'CHANGELOG.md'), 'nen'), handbooks: changelog(read(hb, 'CHANGELOG.md'), 'handbooks') };
+for (const [name, entries] of Object.entries(changelogEntries)) nonEmpty(`${name} CHANGELOG release sections`, entries);
+write('changelog.json', { entries: [...changelogEntries.hatsu, ...changelogEntries.nen, ...changelogEntries.handbooks] });
 
 // ---------------------------------------------------------------- highlighted snippets (shiki, build time, no runtime JS)
 const highlighter = await createHighlighter({ themes: ['github-dark-default', 'github-light'], langs: ['bash', 'json', 'text'] });

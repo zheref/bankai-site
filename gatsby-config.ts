@@ -22,6 +22,8 @@ const config: GatsbyConfig = {
       options: {
         extensions: ['.mdx'],
         mdxOptions: { remarkPlugins: [require('remark-gfm')] },
+        // Heading ids, so the table-of-contents links resolve (no anchor icon, no extra markup).
+        gatsbyRemarkPlugins: [{ resolve: 'gatsby-remark-autolink-headers', options: { icon: false, maintainCase: false } }],
       },
     },
     {

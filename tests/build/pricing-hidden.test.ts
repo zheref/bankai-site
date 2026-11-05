@@ -1,4 +1,4 @@
-import { execFileSync } from 'node:child_process';
+import { spawn } from 'node:child_process';
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { gzipSync } from 'node:zlib';
 import { resolve, join } from 'node:path';
@@ -10,8 +10,13 @@ const root = resolve(__dirname, '..', '..');
 const codeNames = Object.keys(names.skills).filter((k) => !names.plainWordSkills.includes(k));
 const pub = resolve(root, 'public');
 
+/** A full gatsby build, spawned asynchronously so the vitest worker's event loop stays responsive (a synchronous two-minute build times out the worker's RPC heartbeat in CI). */
 function build(env: Record<string, string>) {
-  execFileSync('pnpm', ['build'], { cwd: root, stdio: 'inherit', shell: process.platform === 'win32', env: { ...process.env, NODE_ENV: 'production', GATSBY_TELEMETRY_DISABLED: '1', ...env } });
+  return new Promise<void>((done, fail) => {
+    const child = spawn('pnpm', ['build'], { cwd: root, stdio: 'inherit', shell: process.platform === 'win32', env: { ...process.env, NODE_ENV: 'production', GATSBY_TELEMETRY_DISABLED: '1', ...env } });
+    child.on('error', fail);
+    child.on('exit', (code) => (code === 0 ? done() : fail(new Error(`pnpm build exited ${code}`))));
+  });
 }
 function walk(dir: string, out: string[] = []): string[] {
   for (const e of readdirSync(dir)) {
@@ -25,7 +30,7 @@ const html = (rel: string) => readFileSync(resolve(pub, rel), 'utf8');
 const navAndFooterLinks = (page: string) => [...page.matchAll(/<(?:header|footer|nav)[\s\S]*?<\/(?:header|footer|nav)>/g)].flatMap((m) => [...m[0].matchAll(/href="([^"]+)"/g)].map((h) => h[1] ?? ''));
 
 describe('production build (SHOW_PRICING unset)', () => {
-  beforeAll(() => build({ SHOW_PRICING: '' }));
+  beforeAll(async () => { await build({ SHOW_PRICING: '' }); });
   it('does not emit the pricing page', () => {
     expect(existsSync(resolve(pub, 'pricing'))).toBe(false);
     expect(existsSync(resolve(pub, 'page-data', 'pricing'))).toBe(false);
@@ -82,7 +87,7 @@ describe('production build (SHOW_PRICING unset)', () => {
 });
 
 describe('preview build (SHOW_PRICING=true)', () => {
-  beforeAll(() => build({ SHOW_PRICING: 'true' }));
+  beforeAll(async () => { await build({ SHOW_PRICING: 'true' }); });
   it('renders the pricing page with every value tagged TBD from one config file', () => {
     const page = html('pricing/index.html');
     expect(page).toContain('data-testid="pricing-tiers"');
@@ -105,7 +110,9 @@ describe('preview build (SHOW_PRICING=true)', () => {
     expect(body.match(forbiddenPattern)).toBeNull();
   });
   it('still keeps the pricing path out of the sitemap and out of every nav and footer', () => {
-    for (const f of readdirSync(pub).filter((x) => /^sitemap.*\.xml$/.test(x))) expect(html(f)).not.toMatch(/\/pricing/);
+    const sitemaps = readdirSync(pub).filter((x) => /^sitemap.*\.xml$/.test(x));
+    expect(sitemaps.length, 'sitemap files at the public root (gatsby-plugin-sitemap writes sitemap-index.xml and sitemap-0.xml there)').toBeGreaterThan(0);
+    for (const f of sitemaps) expect(html(f)).not.toMatch(/\/pricing/);
     for (const p of walk(pub).filter((x) => x.endsWith('.html'))) expect(navAndFooterLinks(readFileSync(p, 'utf8')).some((h) => h.includes('/pricing')), p).toBe(false);
   });
 });

@@ -22,9 +22,9 @@ mkdirSync('Reports/lighthouse', { recursive: true });
 let failed = false;
 // QA-15 method: LH_RUNS samples per page (default 6; one warm-up run is discarded before the statistics), the median and p90 reported, the median run's report saved, the host named.
 const runs = Math.max(2, Number(process.env.LH_RUNS ?? 6));
-const quantile = (xs, p) => { const s = [...xs].sort((a, b) => a - b); return s[Math.min(s.length - 1, Math.floor(p * (s.length - 1)))]; };
-const median = (xs) => quantile(xs, 0.5);
-const p90 = (xs) => quantile(xs, 0.9);
+// Median: the mean of the two middle samples on an even count. p90: nearest-rank (the smallest sample at or above the 90th percentile).
+const median = (xs) => { const s = [...xs].sort((a, b) => a - b); const m = Math.floor(s.length / 2); return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
+const p90 = (xs) => { const s = [...xs].sort((a, b) => a - b); return s[Math.min(s.length - 1, Math.ceil(0.9 * s.length) - 1)]; };
 console.log(`host: ${os.platform()} ${os.release()} ${os.arch()} · ${os.cpus()[0]?.model ?? 'cpu unknown'} × ${os.cpus().length} · ${Math.round(os.totalmem() / 2 ** 30)} GiB · lighthouse simulated mobile (390×844, dpr 3) · runs ${runs}, first discarded · thermal state: not read`);
 for (const p of paths) {
   // Simulated throttling is noisy run to run (the same page measured 1.4 s and 2.4 s LCP minutes apart); CI takes the median of LH_RUNS.
@@ -35,7 +35,9 @@ for (const p of paths) {
   }
   const lhrs = all.slice(1); // the first run is the warm-up
   const lcps = lhrs.map((r) => r.audits['largest-contentful-paint'].numericValue);
-  const lhr = lhrs[lcps.indexOf(median(lcps))];
+  // The saved report is the run whose LCP is nearest the median (the median itself may be a mean on an even count).
+  const med = median(lcps);
+  const lhr = lhrs[lcps.reduce((best, v, i) => (Math.abs(v - med) < Math.abs(lcps[best] - med) ? i : best), 0)];
   const scores = Object.fromEntries(Object.keys(lhr.categories).map((k) => [k, Math.round(median(lhrs.map((r) => r.categories[k].score ?? 0)) * 100)]));
   const lcp = median(lcps) / 1000;
   const lcp90 = p90(lcps) / 1000;

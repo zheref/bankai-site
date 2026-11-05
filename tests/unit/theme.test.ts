@@ -21,3 +21,20 @@ describe('AppTheme', () => {
     expect(themeBootScript).toContain('data-theme');
   });
 });
+
+describe('useAppTheme', () => {
+  it('keeps two mounted toggles in sync through the document attribute', async () => {
+    const React = await import('react');
+    const { renderHook, act } = await import('@testing-library/react');
+    const { useAppTheme } = await import('@/library/useAppTheme');
+    document.documentElement.removeAttribute('data-theme');
+    const a = renderHook(() => useAppTheme());
+    const b = renderHook(() => useAppTheme());
+    act(() => a.result.current.set('light'));
+    expect(document.documentElement.getAttribute('data-theme')).toBe('light');
+    expect(b.result.current.scheme).toBe('light');
+    act(() => b.result.current.toggle());
+    expect(a.result.current.scheme).toBe('dark');
+    expect(React.version).toBeTruthy();
+  });
+});

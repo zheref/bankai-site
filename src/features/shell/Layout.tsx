@@ -18,7 +18,7 @@ export function Layout({ children, main = true }: { children: React.ReactNode; m
     <div className="flex min-h-dvh flex-col">
       <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-accent focus:px-4 focus:py-2 focus:text-on-accent">{t('nav.skip')}</a>
       <Header />
-      {main ? <main id="main" className="flex-1">{children}</main> : <div id="main" className="flex-1">{children}</div>}
+      {main ? <main id="main" className="flex-1">{children}</main> : <div className="flex-1">{children}</div>}
       <Footer sources={{ hatsu: v.hatsu?.version, nen: v.nen?.version, handbooks: v.handbooks?.version, readAt: v.hatsu?.readAt }} />
     </div>
   );
