@@ -16,7 +16,8 @@
 #            no workflow; their runs show on the PR's head commit. The maintainer's merge is the deploy (pages.yml
 #            runs on the push to main).
 # To decline a release, close the PR and keep the branch: the next run finds the same pins already proposed and
-# skips. Deleting the branch re-proposes on the next run. A red proof or a refused landing proposes nothing and
+# skips. Deleting the branch re-proposes on the next run, and so does a proposal that never finished (no PR, or an
+# open PR with no check runs at its head). A red proof or a refused landing proposes nothing and
 # fails the run, which GitHub reports to the maintainer.
 #
 # Repository setting this needs: Settings → Actions → General → "Allow GitHub Actions to create and approve pull
@@ -52,6 +53,8 @@ jobs:
     timeout-minutes: 20
     permissions:
       contents: read
+      pull-requests: read # read the proposal PR's state
+      checks: read # read whether the proposal's lanes ran at its head
     env:
       GATSBY_TELEMETRY_DISABLED: '1'
     outputs:
@@ -74,18 +77,30 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         run: node scripts/sources/refresh.mjs --write --notes "${RUNNER_TEMP}/repin-notes.md"
       - id: proposed
-        name: skip a repin the open proposal already carries
+        name: skip a repin already proposed in full
         if: steps.check.outputs.changed == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
+        # Matching branch pins alone are not a finished proposal: the branch is pushed before the PR is opened and
+        # the lanes dispatched, so a failed land leaves the branch behind. Skip only when the pins match AND the
+        # proposal completed -- a CLOSED PR (the maintainer declined it), or an OPEN one whose head carries check
+        # runs. Anything less (no PR at all, or an open PR with no runs at its head) lands again.
         run: |
+          fresh=true
           if gh api "repos/${GITHUB_REPOSITORY}/contents/sources.json?ref=${PROPOSAL_BRANCH}" --jq .content > "${RUNNER_TEMP}/proposed.b64" 2>/dev/null \
             && base64 -d "${RUNNER_TEMP}/proposed.b64" > "${RUNNER_TEMP}/proposed.json" \
             && node scripts/sources/same-pins.mjs "${RUNNER_TEMP}/proposed.json" sources.json; then
-            echo "fresh=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "fresh=true" >> "$GITHUB_OUTPUT"
+            pr=$(gh pr list --repo "${GITHUB_REPOSITORY}" --head "${PROPOSAL_BRANCH}" --state all --limit 1 --json state,headRefOid --jq '.[0] // empty | "\(.state) \(.headRefOid)"')
+            state=${pr%% *}
+            head=${pr#* }
+            if [ "${state}" = CLOSED ]; then
+              fresh=false
+            elif [ "${state}" = OPEN ] && [ "$(gh api "repos/${GITHUB_REPOSITORY}/commits/${head}/check-runs" --jq .total_count)" -gt 0 ]; then
+              fresh=false
+            fi
+            echo "proposal: ${pr:-none}; land again: ${fresh}"
           fi
+          echo "fresh=${fresh}" >> "$GITHUB_OUTPUT"
 
       # Everything below runs only for a repin not already proposed.
       - if: steps.proposed.outputs.fresh == 'true'

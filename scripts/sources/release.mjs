@@ -93,8 +93,9 @@ export function checkRepin(before, after) {
     moved++;
     if (was.follow !== 'release') problems.push(`${name} is not followed by release and may not move`);
     for (const k of new Set([...Object.keys(was), ...Object.keys(now)])) if (!REPIN_KEYS.has(k) && !same(was[k], now[k])) problems.push(`${name}.${k} changed`);
-    if (!/^v\d+\.\d+(?:\.\d+)?$/.test(String(now.ref))) problems.push(`${name}.ref ${JSON.stringify(now.ref)} is not a release tag`);
-    else if (now.ref.slice(1) !== now.version) problems.push(`${name}.version ${now.version} is not its tag ${now.ref}`);
+    // The same optional-v reading parseVersion and decide give a tag, so every repin the refresh accepts can land.
+    if (!/^v?\d+\.\d+(?:\.\d+)?$/.test(String(now.ref))) problems.push(`${name}.ref ${JSON.stringify(now.ref)} is not a release tag`);
+    else if (now.ref.replace(/^v/, '') !== now.version) problems.push(`${name}.version ${now.version} is not its tag ${now.ref}`);
     if (!/^[0-9a-f]{40}$/.test(String(now.commit))) problems.push(`${name}.commit is not a 40-hex sha`);
     if (parseVersion(now.version) && parseVersion(was.version) && compareVersions(now.version, was.version) <= 0) problems.push(`${name} moves back or sideways (${was.version} → ${now.version})`);
   }

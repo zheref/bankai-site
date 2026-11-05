@@ -40,6 +40,13 @@ describe('scripts/pages/check-prefix.mjs', () => {
     expect(r.out).toContain('canonical https://bankai.zheref.dev/ is not under');
     expect(r.out).toContain(`sitemap-0.xml: ${origin}/docs/ is not under`);
   });
+  it('fails a canonical or a sitemap entry that carries the prefix twice', () => {
+    const twice = `${origin}/bankai-site/bankai-site/docs/`;
+    const r = check(site({ 'index.html': page('<a href="/bankai-site/">h</a>', twice) }, `<urlset><url><loc>${twice}</loc></url></urlset>`));
+    expect(r.status).toBe(1);
+    expect(r.out).toContain(`canonical ${twice} carries /bankai-site twice`);
+    expect(r.out).toContain(`sitemap-0.xml: ${twice} carries /bankai-site twice`);
+  });
   it('never passes on an absence: no HTML, nothing checked, no canonical, or no sitemap', () => {
     expect(check(site({})).out).toMatch(/no HTML under/);
     expect(check(site({ 'index.html': page('plain text only') })).out).toMatch(/nothing was checked/);

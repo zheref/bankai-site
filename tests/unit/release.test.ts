@@ -144,6 +144,10 @@ describe('checkRepin (the landing gate)', () => {
     const commit = repinned();
     commit.repos.nen.commit = 'nope';
     expect(checkRepin(sources, commit)).toContain('nen.commit is not a 40-hex sha');
+    const bare = structuredClone(sources);
+    bare.readAt = '2026-11-06';
+    bare.repos.nen = repinEntry(bare.repos.nen, { tag: '9.0.0', version: '9.0.0', commit: sha });
+    expect(checkRepin(sources, bare)).toEqual([]);
     const back = structuredClone(sources);
     back.repos.nen = repinEntry(back.repos.nen, { tag: 'v0.1.0', version: '0.1.0', commit: sha });
     expect(checkRepin(sources, back).join('\n')).toMatch(/moves back or sideways/);

@@ -49,6 +49,7 @@ for (const file of files) {
     }
     canonicals++;
     if (origin && !canonical.startsWith(`${origin}${prefix}/`)) problems.push(`${rel}: canonical ${canonical} is not under ${origin}${prefix}/`);
+    else if (origin && canonical.startsWith(`${origin}${prefix}${prefix}/`)) problems.push(`${rel}: canonical ${canonical} carries ${prefix} twice`);
   }
 }
 if (!files.length) problems.push(`no HTML under ${pub}`);
@@ -57,7 +58,12 @@ if (files.length && !canonicals) problems.push('no page carries a canonical <lin
 const sitemap = join(pub, 'sitemap-0.xml');
 if (origin) {
   if (!existsSync(sitemap)) problems.push('sitemap-0.xml is missing');
-  else for (const [, loc] of readFileSync(sitemap, 'utf8').matchAll(/<loc>([^<]*)<\/loc>/g)) if (!loc.startsWith(`${origin}${prefix}/`)) problems.push(`sitemap-0.xml: ${loc} is not under ${origin}${prefix}/`);
+  else {
+    for (const [, loc] of readFileSync(sitemap, 'utf8').matchAll(/<loc>([^<]*)<\/loc>/g)) {
+      if (!loc.startsWith(`${origin}${prefix}/`)) problems.push(`sitemap-0.xml: ${loc} is not under ${origin}${prefix}/`);
+      else if (loc.startsWith(`${origin}${prefix}${prefix}/`)) problems.push(`sitemap-0.xml: ${loc} carries ${prefix} twice`);
+    }
+  }
 }
 if (problems.length) {
   console.error(problems.slice(0, 50).join('\n'));
