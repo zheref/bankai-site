@@ -12,5 +12,6 @@
   src: local('Courier New'), local('CourierNewPSMT'), local('Liberation Mono'), local('LiberationMono'), local('DejaVu Sans Mono'), local('Menlo');
   ascent-override: 102.0166%;
   descent-override: 30.0049%;
+  line-gap-override: 0%;
   size-adjust: 99.9837%;
 }
