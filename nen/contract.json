@@ -53,10 +53,20 @@
           "unsupported": "A static site has no archive step: the build output under public/ is the artifact the host deploys from."
         },
         "deploy": {
-          "unsupported": "The host for bankai.zheref.dev is TBD by the maintainer; declare a target here once it is chosen."
+          "exe": "gh",
+          "argv": [
+            "workflow",
+            "run",
+            "pages.yml",
+            "--repo",
+            "zheref/bankai-site",
+            "--ref",
+            "main"
+          ],
+          "$comment": "Re-runs the GitHub Pages deploy of main through workflow_dispatch (.github/workflows/pages.yml builds public/ in CI and deploys it). A merge to main already deploys; this is the on-demand form. Needs gh authenticated with workflow access to zheref/bankai-site."
         },
         "release": {
-          "unsupported": "No release lane yet: the site deploys from main once a host is chosen; tags are optional."
+          "unsupported": "No release lane: the site deploys from main to GitHub Pages (.github/workflows/pages.yml); tags are optional."
         }
       }
     },
@@ -67,7 +77,14 @@
         "win32"
       ]
     },
-    "targets": {},
+    "targets": {
+      "github-pages": {
+        "why": "The GitHub Pages site built from main: https://zheref.github.io/bankai-site/ until the bankai.zheref.dev custom domain is set in the repository Pages settings (the build reads the served origin and path from actions/configure-pages, so the switch needs no code change)."
+      },
+      "on-push": {
+        "unsupported": "A merge to main IS the deploy: .github/workflows/pages.yml runs on push, and sources-refresh.yml dispatches it after a release repin. There is no command line for nen to run."
+      }
+    },
     "toolchain": {
       "node": {
         "version": ">=20.0.0",

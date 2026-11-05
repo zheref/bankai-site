@@ -1,0 +1,82 @@
+# Keep the site on the latest PUBLISHED release of every source repository sources.json marks
+# "follow": "release" (hatsu and nen). A bare tag never moves a pin: GitHub's releases/latest answers only a
+# published release that is neither a draft nor a prerelease, and a pin ahead of the latest release is never
+# moved back (scripts/sources/release.mjs).
+#
+# When a pin moves, the repin is proved here before it lands -- the collector at the new commits, the unit tests
+# and the build lane -- then committed straight to main, and pages.yml and quality.yml are dispatched, because a
+# push made with the workflow token starts no workflow. A red proof pushes nothing and fails this run, which
+# GitHub reports to the maintainer.
+#
+# Triggers: an hourly poll (no secret needed: the source repositories are public), a manual run, and a
+# repository_dispatch of type `source-released` that a source repository's release workflow may send for an
+# immediate refresh (that sender needs a token with access to this repository; it is optional).
+name: sources refresh
+
+on:
+  schedule:
+    - cron: '23 * * * *'
+  workflow_dispatch:
+  repository_dispatch:
+    types: [source-released]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sources-refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # push the repin commit to main
+      actions: write # dispatch pages.yml and quality.yml
+    env:
+      GATSBY_TELEMETRY_DISABLED: '1'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: main
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 20
+      - id: check
+        name: latest published releases against the pins
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node scripts/sources/refresh.mjs --write
+
+      # Everything below runs only when a pin moved.
+      - if: steps.check.outputs.changed == 'true'
+        uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+      - if: steps.check.outputs.changed == 'true'
+        run: pnpm install --frozen-lockfile
+      - if: steps.check.outputs.changed == 'true'
+        name: prove the repin (collector at the new commits, unit tests, build lane)
+        run: |
+          pnpm sources:fetch
+          pnpm test
+          pnpm test:build
+      - if: steps.check.outputs.changed == 'true'
+        name: commit the repin to main
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          SUMMARY: ${{ steps.check.outputs.summary }}
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add sources.json
+          git commit -m "chore(sources): ${SUMMARY}" -m "Published release(s) read by .github/workflows/sources-refresh.yml; collector, unit tests and build lane green at the new pins."
+          remote="https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          # main may have moved while the proof ran: replay the one commit on top once, then give up loudly.
+          git push "${remote}" HEAD:main || { git pull --rebase "${remote}" main && git push "${remote}" HEAD:main; }
+      - if: steps.check.outputs.changed == 'true'
+        name: deploy and run the quality lane on the new main
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh workflow run pages.yml --repo "${GITHUB_REPOSITORY}" --ref main
+          gh workflow run quality.yml --repo "${GITHUB_REPOSITORY}" --ref main

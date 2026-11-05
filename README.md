@@ -11,7 +11,7 @@ Agents do the work. You hold the gates.
 - `site.config.ts`: every URL, label, flag and price; prices are tagged TBD until decided.
 - `src/data/names.json`: the one names map (code name, plain alias, one-line description) for every Hatsu skill and agent; the collector refuses to build when one is missing, and a unit test checks both directions.
 - `scripts/sources/`: the build-time readers of the three source repositories (hatsu, nen, bankai-handbooks) at the commits `sources.json` pins; `plugins/gatsby-source-bankai` turns the result into GraphQL. Versions, commands, skills, agents, verbs and changelogs are never typed by hand.
-- `nen/`: the Nen declarations that let Hatsu drive this repository (lanes: build, test, lint, coverage, ui-test).
+- `nen/`: the Nen declarations that let Hatsu drive this repository (lanes: build, test, lint, coverage, ui-test, deploy to the `github-pages` target).
 
 ## Develop
 
@@ -42,6 +42,19 @@ A `gatsby build` prints one ` ERROR  UNKNOWN` block that is Node's `punycode` de
 - Commercial pages (services, pricing) show plain language only: no character name and no skill code name (the build lane checks both). OSS and docs pages show the code name plus the alias.
 - The footer renders the disclaimer verbatim, full on wide screens and short where space is tight.
 - Customers always bring their own model API key. The maintainer's subscriptions are for building Bankai only.
+
+## Deploy
+
+GitHub Pages, from `main`. `.github/workflows/pages.yml` builds the static site in CI and deploys it on every push to `main`; `nen shu deploy --target github-pages --run` re-runs it on demand. Until the custom domain is set the site is served at https://zheref.github.io/bankai-site/: the build reads the origin and base path from `actions/configure-pages` (`GATSBY_SITE_URL`, `PATH_PREFIX` with `PREFIX_PATHS=true`) and `scripts/pages/check-prefix.mjs` fails the deploy if any link misses the prefix. Moving to bankai.zheref.dev is a DNS `CNAME bankai → zheref.github.io` plus the custom-domain field in the repository's Pages settings; no code changes.
+
+## Keeping the docs current
+
+`.github/workflows/sources-refresh.yml` polls hourly (and runs on `workflow_dispatch` or a `repository_dispatch` of type `source-released`) for the latest **published** GitHub release of every repository `sources.json` marks `"follow": "release"` (hatsu and nen). A bare tag, a draft or a prerelease never moves a pin, and a pin is never moved backwards. When a newer release appears it rewrites the pin to the release tag's commit, proves it (collector, unit tests, build lane), commits the repin to `main` and dispatches the deploy and the quality lane. Everything the collector reads (versions, skills, agents, verbs, changelogs) follows; hand-written MDX copy does not, and a release that breaks a reader fails the run instead of deploying.
+
+```sh
+node scripts/sources/refresh.mjs          # what a refresh would move, writing nothing
+node scripts/sources/refresh.mjs --write  # rewrite sources.json locally
+```
 
 See `docs/ARCHITECTURE.md` for the layout and `docs/SOURCES.md` for every claim's citation.
 

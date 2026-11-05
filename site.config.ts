@@ -16,8 +16,12 @@ export const siteConfig = {
   /** Working codename in docs and commits; the GitHub repository name Sergio decided on 2026-11-04. */
   codename: 'site',
   repoName: 'bankai-site',
-  /** bankai.zheref.dev is owned; an independent domain comes later. */
-  siteUrl: 'https://bankai.zheref.dev',
+  /**
+   * The site's ORIGIN (no path): canonical and Open Graph URLs, the sitemap. bankai.zheref.dev is owned; an independent
+   * domain comes later. The Pages deploy sets GATSBY_SITE_URL to the origin GitHub serves the site from (the
+   * github.io host until the custom domain is set); the path prefix is Gatsby's pathPrefix, never part of this value.
+   */
+  siteUrl: process.env.GATSBY_SITE_URL || 'https://bankai.zheref.dev',
   siteTitle: 'bankai',
   /** The brand. Lowercase in repository and package names. */
   brand: 'Bankai',

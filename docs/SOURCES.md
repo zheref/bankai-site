@@ -61,8 +61,7 @@ Internal codenames inside repository prose are replaced by the configured Cloud 
 
 - **ValleIA's site URL**: not in any repository or document read; `site.config.ts` → `services.providerUrl` is unset and the section renders a TBD badge instead of a link. The contact CTA points at the maintainer's GitHub profile until a route is decided.
 - **A waitlist URL** for the Cloud tier teaser: unset; the teaser renders "A waitlist opens later" instead of a form.
-- **The site's own GitHub URL** (`https://github.com/zheref/bankai-site`): the name is decided; the remote does not exist yet.
 - **Trial length** for the Cloud tier: TBD, rendered as `—`.
-- **Hosting** for bankai.zheref.dev: TBD; the `deploy` verb is an `unsupported` seat until a target is declared.
+- **The custom domain** bankai.zheref.dev: GitHub Pages hosts the site (`.github/workflows/pages.yml`, the `github-pages` deploy target); until the domain's DNS record and the Pages custom-domain setting exist, it is served at https://zheref.github.io/bankai-site/.
 - **"Hosted, autonomous runs in your org, GitHub App agents, managed or self-hosted runners"** as the Cloud tier's rows: from the build prompt; no public repository describes the tier.
 - **The stage list** (which skills belong to which SDLC stage): the build prompt's grouping; the hatsu README groups skills by call site, not by SDLC stage.

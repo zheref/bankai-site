@@ -5,6 +5,9 @@ import { siteConfig } from './site.config';
 const showPricing = process.env.SHOW_PRICING === 'true';
 
 const config: GatsbyConfig = {
+  // GitHub Pages serves a project site under /<repository>/ until a custom domain is set; .github/workflows/pages.yml
+  // passes the base path actions/configure-pages reports (empty on a custom domain) with PREFIX_PATHS=true.
+  pathPrefix: process.env.PATH_PREFIX || undefined,
   siteMetadata: {
     title: siteConfig.siteTitle,
     siteUrl: siteConfig.siteUrl,

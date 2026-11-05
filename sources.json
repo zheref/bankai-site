@@ -1,9 +1,10 @@
 {
-  "$comment": "The source repositories the site reads at build time, pinned to the commit the copy was verified against. scripts/sources/fetch.mjs clones them into .sources/<name> at exactly these commits; scripts/sources/collect.mjs refuses a checkout whose HEAD differs unless BANKAI_SOURCES_ALLOW_DRIFT=1. Every command, version, count, skill, agent and changelog the site shows is read from these trees; see docs/SOURCES.md for the per-claim citation list.",
+  "$comment": "The source repositories the site reads at build time, pinned to the commit the copy was verified against. scripts/sources/fetch.mjs clones them into .sources/<name> at exactly these commits; a repository marked \"follow\": \"release\" is repinned to its latest published GitHub release by scripts/sources/refresh.mjs (.github/workflows/sources-refresh.yml), never to a bare tag and never backwards; scripts/sources/collect.mjs refuses a checkout whose HEAD differs unless BANKAI_SOURCES_ALLOW_DRIFT=1. Every command, version, count, skill, agent and changelog the site shows is read from these trees; see docs/SOURCES.md for the per-claim citation list.",
   "readAt": "2026-11-04",
   "repos": {
     "hatsu": {
       "url": "https://github.com/zheref/hatsu",
+      "follow": "release",
       "ref": "main",
       "commit": "3c582c18a4a74119b748c76fbf2aa8ca275ef776",
       "version": "0.159.0",
@@ -12,6 +13,7 @@
     },
     "nen": {
       "url": "https://github.com/zheref/nen",
+      "follow": "release",
       "ref": "main",
       "commit": "d7a720ddcd5c482da8ab2f40ce678a51828cb7a8",
       "version": "0.29.0",
