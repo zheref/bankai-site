@@ -15,6 +15,14 @@ import { chromium } from '@playwright/test';
 const base = process.env.BASE_URL ?? 'http://localhost:9000';
 const paths = process.argv.slice(2).length ? process.argv.slice(2) : ['/', '/docs/', '/services/'];
 const threshold = Number(process.env.LH_MIN ?? 95);
+/**
+ * CLS budget per page. 0.05 is the brief's budget. The two long reference pages carry a recorded residue (the maintainer's
+ * ruling of 2026-11-05 on PR #4): font-display: swap keeps the brand fonts on every paint, and the metric-matched fallback
+ * cannot be sized once for macOS and Linux Chrome (Liberation Sans renders about 3 % narrower than Arial at 16 px), so a
+ * swap still moves a line on a Linux host; tracked under zheref/bankai-site#2. Their gate is 0.1 (Lighthouse's
+ * needs-improvement bound) until that lands.
+ */
+const CLS_BUDGET = { default: 0.05, '/docs/nen-reference/': 0.1, '/docs/changelog/': 0.1 };
 const port = Number(process.env.LH_PORT ?? 9222);
 const browser = await chromium.launch({ args: [`--remote-debugging-port=${port}`, '--no-sandbox'] });
 const chrome = { port, kill: () => browser.close() };
@@ -44,9 +52,10 @@ for (const p of paths) {
   const cls = median(lhrs.map((r) => r.audits['cumulative-layout-shift'].numericValue));
   const tbt = median(lhrs.map((r) => r.audits['total-blocking-time'].numericValue));
   writeFileSync(`Reports/lighthouse/${p.replace(/\W+/g, '_') || 'root'}.json`, JSON.stringify(lhr));
-  const bad = Object.values(scores).some((s) => s < threshold) || lcp > 2.0 || cls > 0.05;
+  const clsMax = CLS_BUDGET[p] ?? CLS_BUDGET.default;
+  const bad = Object.values(scores).some((s) => s < threshold) || lcp > 2.0 || cls > clsMax;
   failed ||= bad;
-  console.log(`${bad ? 'FAIL' : 'ok  '} ${p} (median of ${lhrs.length})  performance ${scores.performance} · accessibility ${scores.accessibility} · best-practices ${scores['best-practices']} · seo ${scores.seo} · LCP ${lcp.toFixed(2)}s (p90 ${lcp90.toFixed(2)}s) · CLS ${cls.toFixed(3)} · TBT ${Math.round(tbt)}ms`);
+  console.log(`${bad ? 'FAIL' : 'ok  '} ${p} (median of ${lhrs.length})  performance ${scores.performance} · accessibility ${scores.accessibility} · best-practices ${scores['best-practices']} · seo ${scores.seo} · LCP ${lcp.toFixed(2)}s (p90 ${lcp90.toFixed(2)}s) · CLS ${cls.toFixed(3)} (budget ${clsMax}) · TBT ${Math.round(tbt)}ms`);
 }
 await chrome.kill();
 process.exit(failed ? 1 : 0);
