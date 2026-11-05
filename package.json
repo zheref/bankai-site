@@ -12,6 +12,7 @@
     "sources:fetch": "node scripts/sources/fetch.mjs",
     "sources:collect": "node scripts/sources/collect.mjs",
     "fonts:fallbacks": "node scripts/fonts/fallbacks.mjs",
+    "fonts:check": "node scripts/fonts/check.mjs",
     "prebuild": "node scripts/sources/collect.mjs",
     "predevelop": "node scripts/sources/collect.mjs",
     "develop": "gatsby develop",

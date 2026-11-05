@@ -58,8 +58,15 @@ export function Name({ code, alias, proposed }: { code: string; alias: string | 
 }
 
 /** A table in a keyboard-focusable scroll region (axe scrollable-region-focusable; UX-7 no page overflow). */
-export function Table({ children, ...rest }: React.TableHTMLAttributes<HTMLTableElement>) {
-  return <div className="table-scroll" tabIndex={0}><table {...rest}>{children}</table></div>;
+export function Table({ children, cols, ...rest }: React.TableHTMLAttributes<HTMLTableElement> & { cols?: Array<'xs' | 's' | 'm' | 'l'> }) {
+  return (
+    <div className="table-scroll" tabIndex={0}>
+      <table className={cols ? 'table-fixed-cols' : undefined} {...rest}>
+        {cols ? <colgroup>{cols.map((c, i) => <col key={i} className={`c-${c}`} />)}</colgroup> : null}
+        {children}
+      </table>
+    </div>
+  );
 }
 export function Pre(props: React.HTMLAttributes<HTMLPreElement>) {
   return <pre tabIndex={0} {...props} />;
@@ -108,7 +115,7 @@ export function LeadAgent() {
     <div id="agent-kurapika" className="scroll-mt-24">
       <h3 className="text-xl"><Name code={k.name} alias={k.alias} /></h3>
       <p>{k.description}</p>
-      <Table>
+      <Table cols={['s', 's', 'l', 'm']}>
         <thead><tr><th>Mode</th><th>Plain name</th><th>Lane</th><th>Where its work stops</th></tr></thead>
         <tbody>{(k.modes ?? []).map((m) => <tr key={m.mode}><td><code>{m.mode}</code></td><td>{m.alias}</td><InlineMd as="td" html={m.lane} /><InlineMd as="td" html={m.stops} /></tr>)}</tbody>
       </Table>
@@ -180,7 +187,7 @@ export function SkillCatalogue() {
 export function GatesTable() {
   const d = useDocsData();
   return (
-    <Table data-testid="gates-table">
+    <Table data-testid="gates-table" cols={['xs', 'xs', 'l', 'l']}>
       <thead><tr><th>Gate</th><th>Clause</th><th>What it is</th><th>Delegable?</th></tr></thead>
       <tbody>{slice(d, 'allHatsuGate', 'gates').nodes.map((g) => <tr key={g.gate}><td><strong>{g.gate.replace(/\*/g, '')}</strong></td><td><code>{g.clause}</code></td><InlineMd as="td" html={g.whatHtml} /><InlineMd as="td" html={g.delegableHtml} /></tr>)}</tbody>
     </Table>
@@ -190,7 +197,7 @@ export function GatesTable() {
 export function TiersTable() {
   const d = useDocsData();
   return (
-    <Table data-testid="tiers-table">
+    <Table data-testid="tiers-table" cols={['s', 'm', 's', 's', 's', 's']}>
       <thead><tr><th>Tier</th><th>Role</th><th>Claude Code</th><th>Codex</th><th>Cursor</th><th>Antigravity</th></tr></thead>
       <tbody>{slice(d, 'allModelTier', 'tiers').nodes.map((r) => <tr key={r.tier}><td><code>{r.tier}</code></td><InlineMd as="td" html={r.role} /><td><code>{r.claudeCode}</code></td><td><code>{r.codex}</code></td><td><code>{r.cursor}</code></td><td><code>{r.antigravity}</code></td></tr>)}</tbody>
     </Table>
@@ -200,7 +207,7 @@ export function TiersTable() {
 export function ProfilesTable() {
   const d = useDocsData();
   return (
-    <Table>
+    <Table cols={['s', 'l', 'm', 's']}>
       <thead><tr><th>Profile</th><th>Per turn</th><th>Deferred to mukai</th><th>Report</th></tr></thead>
       <tbody>{slice(d, 'allRunProfile', 'profiles').nodes.map((r) => <tr key={r.profile}><td><code>{r.profile}</code></td><InlineMd as="td" html={r.perTurnHtml} /><InlineMd as="td" html={r.deferredHtml} /><td><code>{r.report}</code></td></tr>)}</tbody>
     </Table>
@@ -211,7 +218,7 @@ export function HumanPhases() {
   const d = useDocsData();
   const skills = Object.fromEntries((d.allHatsuSkill?.nodes ?? []).map((s) => [s.name, s]));
   return (
-    <Table data-testid="human-phases">
+    <Table data-testid="human-phases" cols={['s', 'l', 'l']}>
       <thead><tr><th>Phase</th><th>What it does</th><th>Why it is the human's</th></tr></thead>
       <tbody>{slice(d, 'allHumanPhase', 'phases').nodes.map((p) => { const name = p.phase.replace(/[^a-z-]/g, ''); const s = skills[name]; return <tr key={p.phase}><td>{s ? <Name code={s.name} alias={s.alias} /> : <strong>{p.phase}</strong>}</td><InlineMd as="td" html={p.whatHtml} /><InlineMd as="td" html={p.whyHtml} /></tr>; })}</tbody>
     </Table>
@@ -221,7 +228,7 @@ export function HumanPhases() {
 export function ConfigFiles() {
   const d = useDocsData();
   return (
-    <Table data-testid="config-files">
+    <Table data-testid="config-files" cols={['s', 's', 'l', 's']}>
       <thead><tr><th>File</th><th>Lives in</th><th>Decides</th><th>Reference</th></tr></thead>
       <tbody>{slice(d, 'allConfigFile', 'config').nodes.map((c) => <tr key={c.file}><td><code>{c.file}</code></td><InlineMd as="td" html={c.livesIn} /><InlineMd as="td" html={c.decidesHtml} /><td><a href={`${siteConfig.github.hatsu}/blob/main/docs/config/${c.page}`} rel="noopener">{c.page}</a></td></tr>)}</tbody>
     </Table>
@@ -237,7 +244,7 @@ export function NenVerbs() {
       {families.map((f) => (
         <section key={f} id={`family-${f}`} className="scroll-mt-24">
           <h3><code>nen {f}</code></h3>
-          <Table>
+          <Table cols={['m', 'l', 'm', 'xs']}>
             <thead><tr><th>Verb</th><th>Purpose</th><th>Reads</th><th>--json</th></tr></thead>
             <tbody>{verbs.filter((v) => v.family === f).map((v) => <tr key={v.verb} id={`verb-${v.verb.replace(/\s+/g, '-')}`} className="scroll-mt-24"><td><code>{v.verb}</code></td><InlineMd as="td" html={v.purposeHtml} /><InlineMd as="td" html={v.readsHtml} /><td>{v.json}</td></tr>)}</tbody>
           </Table>
@@ -250,7 +257,7 @@ export function NenVerbs() {
 export function HandbookFamilies() {
   const d = useDocsData();
   return (
-    <Table data-testid="handbook-families">
+    <Table data-testid="handbook-families" cols={['m', 'l', 's']}>
       <thead><tr><th>Family</th><th>Where</th><th>Prefix</th></tr></thead>
       <tbody>{slice(d, 'allHandbookFamily', 'handbooks').nodes.map((f) => <tr key={f.where}><td>{f.family}</td><td><a href={`${siteConfig.github.handbooks}/blob/main/${f.where}`} rel="noopener"><code>{f.where}</code></a></td><td><code>{f.prefix}</code></td></tr>)}</tbody>
     </Table>

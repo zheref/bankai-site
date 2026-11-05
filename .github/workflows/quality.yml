@@ -43,6 +43,8 @@ jobs:
           pnpm exec gatsby serve -p 9000 &
           for i in $(seq 1 30); do curl -fsS -o /dev/null http://localhost:9000/ && break; sleep 1; done
           curl -fsS -o /dev/null http://localhost:9000/
+          # The font-swap layout guard (advisory while the fallback faces settle): which blocks a swap re-flows, and what the runner resolves.
+          FONT_CHECK_ADVISORY=1 node scripts/fonts/check.mjs
           node scripts/lighthouse.mjs / /docs/ /services/ /docs/changelog/ /docs/nen-reference/
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: always()

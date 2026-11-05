@@ -24,7 +24,8 @@ export function OssVsCloudFragment() {
   return (
     <Section id="open-source" title={t('oss.title')} lead={t('oss.lead')}>
       <div className="overflow-x-auto" tabIndex={0} aria-label="Open source versus the Cloud tier, scrollable">
-        <table className="w-full min-w-[32rem] border-collapse text-sm">
+        <table className="w-full min-w-[32rem] table-fixed border-collapse text-sm">
+          <colgroup><col className="w-[44%]" /><col className="w-[28%]" /><col className="w-[28%]" /></colgroup>
           <caption className="sr-only">Open source versus the {cloud}</caption>
           <thead>
             <tr className="text-left font-mono text-xs uppercase tracking-wide text-muted">
