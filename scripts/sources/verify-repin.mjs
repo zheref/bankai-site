@@ -8,16 +8,23 @@
  *   node scripts/sources/verify-repin.mjs <main's sources.json> <proved sources.json>
  */
 import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { checkRepin } from './release.mjs';
 
-const [beforePath, afterPath] = process.argv.slice(2);
-if (!beforePath || !afterPath) {
-  console.error('usage: verify-repin.mjs <main sources.json> <proved sources.json>');
-  process.exit(2);
+/** Exit code for the two paths: 0 landable, 1 refused, 2 usage. */
+export function main([beforePath, afterPath] = [], { log = console.log, error = console.error } = {}) {
+  if (!beforePath || !afterPath) {
+    error('usage: verify-repin.mjs <main sources.json> <proved sources.json>');
+    return 2;
+  }
+  const problems = checkRepin(JSON.parse(readFileSync(beforePath, 'utf8')), JSON.parse(readFileSync(afterPath, 'utf8')));
+  if (problems.length) {
+    error(`verify-repin: refusing to land:\n  ${problems.join('\n  ')}`);
+    return 1;
+  }
+  log('verify-repin: only release pins moved; landable');
+  return 0;
 }
-const problems = checkRepin(JSON.parse(readFileSync(beforePath, 'utf8')), JSON.parse(readFileSync(afterPath, 'utf8')));
-if (problems.length) {
-  console.error(`verify-repin: refusing to land:\n  ${problems.join('\n  ')}`);
-  process.exit(1);
-}
-console.log('verify-repin: only release pins moved; landable');
+
+if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) process.exit(main(process.argv.slice(2)));

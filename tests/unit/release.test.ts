@@ -185,3 +185,71 @@ describe('samePins (skip a repin already proposed)', () => {
     expect(() => execFileSync('node', [script, sourcesPath, other], { stdio: 'pipe' })).toThrow();
   });
 });
+
+describe('the scripts, in-process', () => {
+  const sources = () => JSON.parse(readFileSync(sourcesPath, 'utf8'));
+  const sha = '1'.repeat(40);
+  const api = (nenTag: string, nenManifest = nenTag.slice(1)) =>
+    vi.fn(async (url: string) => {
+      const json = (status: number, body: unknown) => ({ ok: status < 300, status, json: async () => body });
+      if (url.endsWith('zheref/hatsu/releases/latest')) return json(200, { tag_name: 'v0.152.0' });
+      if (url.endsWith('zheref/nen/releases/latest')) return json(200, { tag_name: nenTag, published_at: '2026-11-05T12:00:00Z' });
+      if (url.includes('/commits/')) return json(200, { sha });
+      const manifest = (version: string) => json(200, { content: Buffer.from(JSON.stringify({ version })).toString('base64') });
+      if (url.includes('zheref/hatsu/contents/')) return manifest('0.152.0');
+      if (url.includes('zheref/nen/contents/package.json')) return manifest(nenManifest);
+      return json(404, {});
+    });
+
+  it('refresh reports without --write, and with it writes the pins, readAt, notes, summary and outputs', async () => {
+    const { refresh } = await import('../../scripts/sources/refresh.mjs');
+    const dir = mkdtempSync(join(tmpdir(), 'refresh-'));
+    const lines: string[] = [];
+    const dry = await refresh({ argv: [], env: {}, sources: sources(), sourcesPath: join(dir, 'sources.json'), fetchImpl: api('v9.0.0'), log: (l: string) => lines.push(l) });
+    expect(dry.moved).toEqual(['nen v9.0.0']);
+    expect(lines.join('\n')).toMatch(/hatsu: pinned .* is ahead of release v0\.152\.0[\s\S]*dry run/);
+
+    const env = { GITHUB_TOKEN: 't', GITHUB_OUTPUT: join(dir, 'out'), GITHUB_STEP_SUMMARY: join(dir, 'summary') };
+    const notes = join(dir, 'notes.md');
+    const done = await refresh({ argv: ['--write', '--notes', notes], env, sources: sources(), sourcesPath: join(dir, 'sources.json'), fetchImpl: api('v9.0.0'), now: new Date('2030-01-02T03:04:05Z'), log: () => {} });
+    const written = JSON.parse(readFileSync(join(dir, 'sources.json'), 'utf8'));
+    expect(written.readAt).toBe('2030-01-02');
+    expect(written.repos.nen).toMatchObject({ ref: 'v9.0.0', commit: sha, version: '9.0.0' });
+    expect(checkRepin(sources(), written)).toEqual([]);
+    expect(readFileSync(notes, 'utf8')).toContain(`https://github.com/zheref/nen/compare/${sources().repos.nen.commit}...${sha}`);
+    expect(readFileSync(env.GITHUB_STEP_SUMMARY, 'utf8')).toContain('### Release repin');
+    expect(readFileSync(env.GITHUB_OUTPUT, 'utf8')).toBe('changed=true\nsummary=repin nen v9.0.0\n');
+    expect(done.compares).toHaveLength(1);
+  });
+  it('refresh refuses a release whose manifest disagrees, and a --notes with no path', async () => {
+    const { refresh } = await import('../../scripts/sources/refresh.mjs');
+    await expect(refresh({ sources: sources(), fetchImpl: api('v9.0.0', '8.0.0'), log: () => {} })).rejects.toThrow(/manifest disagrees/);
+    await expect(refresh({ argv: ['--notes'], sources: sources(), fetchImpl: api('v9.0.0'), log: () => {} })).rejects.toThrow(/--notes needs a file path/);
+  });
+  it('refresh writes nothing and outputs changed=false when no release is newer', async () => {
+    const { refresh } = await import('../../scripts/sources/refresh.mjs');
+    const dir = mkdtempSync(join(tmpdir(), 'refresh-'));
+    const out = join(dir, 'out');
+    const notes = join(dir, 'notes.md');
+    const r = await refresh({ argv: ['--write', '--notes', notes], env: { GITHUB_OUTPUT: out }, sources: sources(), sourcesPath: join(dir, 'sources.json'), fetchImpl: api(`v${sources().repos.nen.version}`), log: () => {} });
+    expect(r.moved).toEqual([]);
+    expect(readFileSync(out, 'utf8')).toBe('changed=false\nsummary=no newer release\n');
+    expect(readFileSync(notes, 'utf8')).toBe('');
+  });
+  it('verify-repin and same-pins main() answer 0, 1 and 2', async () => {
+    const verify = await import('../../scripts/sources/verify-repin.mjs');
+    const pins = await import('../../scripts/sources/same-pins.mjs');
+    const dir = mkdtempSync(join(tmpdir(), 'mains-'));
+    const moved = sources();
+    moved.repos.nen = repinEntry(moved.repos.nen, { tag: 'v9.0.0', version: '9.0.0', commit: sha });
+    const movedPath = join(dir, 'moved.json');
+    writeFileSync(movedPath, formatSources(moved));
+    const quiet = { log: () => {}, error: () => {} };
+    expect(verify.main([sourcesPath, movedPath], quiet)).toBe(0);
+    expect(verify.main([sourcesPath, sourcesPath], quiet)).toBe(1);
+    expect(verify.main([], quiet)).toBe(2);
+    expect(pins.main([sourcesPath, sourcesPath], quiet)).toBe(0);
+    expect(pins.main([sourcesPath, movedPath], quiet)).toBe(1);
+    expect(pins.main([sourcesPath], quiet)).toBe(2);
+  });
+});
