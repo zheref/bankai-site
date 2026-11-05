@@ -1,6 +1,8 @@
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
-import { parseVersion, compareVersions, slugOf, versionSource, decide, repinEntry, formatSources, readRelease } from '../../scripts/sources/release.mjs';
+import { execFileSync } from 'node:child_process';
+import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join, resolve } from 'node:path';
+import { parseVersion, compareVersions, slugOf, versionSource, decide, repinEntry, formatSources, readRelease, checkRepin, checkManifest, outputLines, samePins } from '../../scripts/sources/release.mjs';
 
 const sourcesPath = resolve(__dirname, '..', '..', 'sources.json');
 
@@ -51,6 +53,20 @@ describe('release-driven repin', () => {
   });
 });
 
+describe('refresh driver refusals and outputs', () => {
+  it('passes a manifest that matches the tag, refuses one that does not, and skips when no manifest was named', () => {
+    expect(() => checkManifest('nen', { tag: 'v0.30.0', manifestVersion: '0.30.0' }, '0.30.0')).not.toThrow();
+    expect(() => checkManifest('nen', { tag: 'v0.30.0', manifestVersion: 'v0.30.0' }, '0.30.0')).not.toThrow();
+    expect(() => checkManifest('nen', { tag: 'v0.30.0', manifestVersion: '0.29.0' }, '0.30.0')).toThrow(/manifest disagrees with its tag/);
+    expect(() => checkManifest('handbooks', { tag: 'v1.0.0', manifestVersion: null }, '1.0.0')).not.toThrow();
+  });
+  it('writes the step outputs the workflow reads', () => {
+    expect(outputLines([], true)).toBe('changed=false\nsummary=no newer release\n');
+    expect(outputLines(['nen v0.30.0'], false)).toBe('changed=false\nsummary=repin nen v0.30.0\n');
+    expect(outputLines(['hatsu v0.160.0', 'nen v0.30.0'], true)).toBe('changed=true\nsummary=repin hatsu v0.160.0, nen v0.30.0\n');
+  });
+});
+
 describe('readRelease', () => {
   const asFetch = (fn: unknown) => fn as typeof fetch;
   const sha = 'd'.repeat(40);
@@ -75,9 +91,97 @@ describe('readRelease', () => {
     expect(await readRelease('zheref/nen', { token: 't0k', versionFrom: 'package.json#version', fetchImpl: asFetch(fetchImpl) })).toEqual({ tag: 'v0.30.0', commit: sha, publishedAt: '2026-11-05T12:01:57Z', manifestVersion: '0.30.0' });
     expect(fetchImpl.mock.calls[0]?.[1]?.headers?.authorization).toBe('Bearer t0k');
   });
+  it('refuses a release whose named manifest carries no version', async () => {
+    const content = Buffer.from(JSON.stringify({ name: 'nen' })).toString('base64');
+    const fetchImpl = respond({
+      '/releases/latest': { body: { tag_name: 'v0.30.0' } },
+      '/commits/v0.30.0': { body: { sha } },
+      [`/contents/package.json?ref=${sha}`]: { body: { content } },
+    });
+    await expect(readRelease('zheref/nen', { versionFrom: 'package.json#version', fetchImpl: asFetch(fetchImpl) })).rejects.toThrow(/has no version/);
+  });
   it('fails loudly on an API error or a tag that names no commit', async () => {
     await expect(readRelease('zheref/x', { fetchImpl: asFetch(respond({ '/releases/latest': { status: 403 } })) })).rejects.toThrow(/HTTP 403/);
     const fetchImpl = respond({ '/releases/latest': { body: { tag_name: 'v1.0.0' } }, '/commits/v1.0.0': { body: { sha: 'nope' } } });
     await expect(readRelease('zheref/x', { fetchImpl: asFetch(fetchImpl) })).rejects.toThrow(/resolved to no commit/);
+  });
+});
+
+describe('checkRepin (the landing gate)', () => {
+  const sources = JSON.parse(readFileSync(sourcesPath, 'utf8'));
+  const sha = 'e'.repeat(40);
+  const repinned = () => {
+    const after = structuredClone(sources);
+    after.readAt = '2026-11-06';
+    after.repos.nen = repinEntry(after.repos.nen, { tag: 'v9.0.0', version: '9.0.0', commit: sha });
+    return after;
+  };
+
+  it('lands a pin move of a followed repository and nothing else', () => {
+    expect(checkRepin(sources, repinned())).toEqual([]);
+  });
+  it('refuses when nothing moved', () => {
+    expect(checkRepin(sources, sources)).toContain('no repository moved');
+  });
+  it('refuses a moved url, an unfollowed repository, or a changed top-level key', () => {
+    const url = repinned();
+    url.repos.nen.url = 'https://github.com/attacker/nen';
+    expect(checkRepin(sources, url)).toContain('nen.url changed');
+    const handbooks = structuredClone(sources);
+    handbooks.repos.handbooks.commit = sha;
+    expect(checkRepin(sources, handbooks)).toContain('handbooks is not followed by release and may not move');
+    const extra = repinned();
+    extra.$comment = 'rewritten';
+    expect(checkRepin(sources, extra)).toContain('$comment changed');
+  });
+  it('refuses a ref that is not a release tag, a version off its tag, a bad sha, or a move backwards', () => {
+    const ref = repinned();
+    ref.repos.nen.ref = 'main';
+    expect(checkRepin(sources, ref).join('\n')).toMatch(/nen\.ref "main" is not a release tag/);
+    const version = repinned();
+    version.repos.nen.version = '9.0.1';
+    expect(checkRepin(sources, version).join('\n')).toMatch(/nen\.version 9\.0\.1 is not its tag v9\.0\.0/);
+    const commit = repinned();
+    commit.repos.nen.commit = 'nope';
+    expect(checkRepin(sources, commit)).toContain('nen.commit is not a 40-hex sha');
+    const back = structuredClone(sources);
+    back.repos.nen = repinEntry(back.repos.nen, { tag: 'v0.1.0', version: '0.1.0', commit: sha });
+    expect(checkRepin(sources, back).join('\n')).toMatch(/moves back or sideways/);
+  });
+  it('is what verify-repin.mjs exits on: 0 for a pin move, 1 for anything else', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'repin-'));
+    const ok = join(dir, 'ok.json');
+    const bad = join(dir, 'bad.json');
+    writeFileSync(ok, formatSources(repinned()));
+    const tampered = repinned();
+    tampered.repos.nen.url = 'https://github.com/attacker/nen';
+    writeFileSync(bad, formatSources(tampered));
+    const script = resolve(__dirname, '..', '..', 'scripts', 'sources', 'verify-repin.mjs');
+    expect(execFileSync('node', [script, sourcesPath, ok], { encoding: 'utf8' })).toMatch(/landable/);
+    expect(() => execFileSync('node', [script, sourcesPath, bad], { stdio: 'pipe' })).toThrow(/nen\.url changed/);
+  });
+});
+
+describe('samePins (skip a repin already proposed)', () => {
+  const sources = JSON.parse(readFileSync(sourcesPath, 'utf8'));
+  const sha = 'f'.repeat(40);
+  it('ignores readAt and prose, and tells a different ref or commit apart', () => {
+    const later = structuredClone(sources);
+    later.readAt = '2030-01-01';
+    later.$comment = 'other words';
+    expect(samePins(sources, later)).toBe(true);
+    const moved = structuredClone(sources);
+    moved.repos.nen = repinEntry(moved.repos.nen, { tag: 'v9.0.0', version: '9.0.0', commit: sha });
+    expect(samePins(sources, moved)).toBe(false);
+  });
+  it('is what same-pins.mjs exits on: 0 already proposed, 1 a different repin', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'pins-'));
+    const moved = structuredClone(sources);
+    moved.repos.nen = repinEntry(moved.repos.nen, { tag: 'v9.0.0', version: '9.0.0', commit: sha });
+    const other = join(dir, 'moved.json');
+    writeFileSync(other, formatSources(moved));
+    const script = resolve(__dirname, '..', '..', 'scripts', 'sources', 'same-pins.mjs');
+    expect(execFileSync('node', [script, sourcesPath, sourcesPath], { encoding: 'utf8' })).toMatch(/already proposed/);
+    expect(() => execFileSync('node', [script, sourcesPath, other], { stdio: 'pipe' })).toThrow();
   });
 });

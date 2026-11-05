@@ -50,6 +50,58 @@ export function repinEntry(entry, { tag, version, commit }) {
   return { ...entry, ref: tag, commit, version, ...(entry.versionFrom === undefined ? {} : { versionFrom }) };
 }
 
+/** Refuses a release whose manifest version (read at its tag's commit) is not the tag's version; null means no manifest was named. */
+export function checkManifest(name, release, version) {
+  if (release.manifestVersion === null || release.manifestVersion === undefined) return;
+  if (String(release.manifestVersion).replace(/^v/, '') !== version) {
+    throw new Error(`${name}: release ${release.tag} carries manifest version ${release.manifestVersion}; refusing to pin a release whose manifest disagrees with its tag`);
+  }
+}
+
+/** The step outputs sources-refresh.yml reads: `changed` (true only when a pin moved and was written) and `summary`. */
+export function outputLines(moved, written) {
+  return `changed=${moved.length > 0 && written}\nsummary=${moved.length ? `repin ${moved.join(', ')}` : 'no newer release'}\n`;
+}
+
+/** Whether two sources.json documents pin every repository to the same ref and commit (readAt and prose aside). */
+export function samePins(a, b) {
+  const pins = (s) => Object.entries(s?.repos ?? {}).map(([name, e]) => [name, e.ref, e.commit]).sort((x, y) => (x[0] < y[0] ? -1 : 1));
+  return JSON.stringify(pins(a)) === JSON.stringify(pins(b));
+}
+
+/** The keys a repin may move; every other key of an entry, and of the file, must arrive unchanged. */
+const REPIN_KEYS = new Set(['ref', 'commit', 'version', 'versionFrom']);
+const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+
+/**
+ * What the write-token job checks before it lands a repin proved elsewhere: `after` may differ from `before` only by
+ * repinned entries of followed repositories (ref = a release tag, its 40-hex commit, the tag's version, the
+ * versionFrom note) and `readAt`. Returns the problems found; an empty list is the only landable answer.
+ */
+export function checkRepin(before, after) {
+  const problems = [];
+  const keys = (o) => Object.keys(o ?? {}).sort();
+  if (!same(keys(before), keys(after))) problems.push('top-level keys differ');
+  for (const k of keys(before)) if (k !== 'repos' && k !== 'readAt' && !same(before[k], after?.[k])) problems.push(`${k} changed`);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(after?.readAt))) problems.push(`readAt ${JSON.stringify(after?.readAt)} is not a date`);
+  if (!same(keys(before?.repos), keys(after?.repos))) problems.push('repository names differ');
+  let moved = 0;
+  for (const name of keys(before?.repos)) {
+    const was = before.repos[name];
+    const now = after?.repos?.[name] ?? {};
+    if (same(was, now)) continue;
+    moved++;
+    if (was.follow !== 'release') problems.push(`${name} is not followed by release and may not move`);
+    for (const k of new Set([...Object.keys(was), ...Object.keys(now)])) if (!REPIN_KEYS.has(k) && !same(was[k], now[k])) problems.push(`${name}.${k} changed`);
+    if (!/^v\d+\.\d+(?:\.\d+)?$/.test(String(now.ref))) problems.push(`${name}.ref ${JSON.stringify(now.ref)} is not a release tag`);
+    else if (now.ref.slice(1) !== now.version) problems.push(`${name}.version ${now.version} is not its tag ${now.ref}`);
+    if (!/^[0-9a-f]{40}$/.test(String(now.commit))) problems.push(`${name}.commit is not a 40-hex sha`);
+    if (parseVersion(now.version) && parseVersion(was.version) && compareVersions(now.version, was.version) <= 0) problems.push(`${name} moves back or sideways (${was.version} → ${now.version})`);
+  }
+  if (!moved) problems.push('no repository moved');
+  return problems;
+}
+
 /** sources.json as it is kept on disk: two-space JSON, string arrays on one line, a trailing newline. */
 export function formatSources(sources) {
   return `${JSON.stringify(sources, null, 2).replace(/\[\n\s+("(?:[^"\\]|\\.)*"(?:,\n\s+"(?:[^"\\]|\\.)*")*)\n\s+\]/g, (_, items) => `[${items.split(/,\n\s+/).join(', ')}]`)}\n`;
@@ -79,6 +131,8 @@ export async function readRelease(slug, { token, versionFrom, fetchImpl = fetch 
     const file = await get(`https://api.github.com/repos/${slug}/contents/${source.path}?ref=${commit}`);
     const json = JSON.parse(Buffer.from(file.content, 'base64').toString('utf8'));
     manifestVersion = source.key.split('.').reduce((o, k) => (o == null ? o : o[k]), json) ?? null;
+    // A manifest that names no version cannot vouch for the tag: refuse rather than skip the comparison.
+    if (manifestVersion === null) throw new Error(`${slug}: ${source.path} at ${tag} has no ${source.key}`);
   }
   return { tag, commit, publishedAt: latest.published_at ?? null, manifestVersion };
 }

@@ -1,7 +1,7 @@
 # GitHub Pages: build the static site from main and deploy it. A merge to main IS the deploy (the `on-push`
 # target in nen/contract.json); `nen shu deploy --target github-pages --run` re-runs it on demand through
-# workflow_dispatch, and .github/workflows/sources-refresh.yml dispatches it after a release repin (a push made
-# with the workflow token starts no workflow, so that push alone would deploy nothing).
+# workflow_dispatch. A release repin from .github/workflows/sources-refresh.yml reaches here the same way as any
+# other change: as a pull request the maintainer merges.
 #
 # The base path is GitHub's, not this file's: actions/configure-pages reports the origin and path the site is
 # served from -- https://zheref.github.io + /bankai-site until a custom domain is set, the custom domain + an
@@ -25,6 +25,10 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      pages: read # actions/configure-pages reads the site's origin and base path from the Pages API
     env:
       GATSBY_TELEMETRY_DISABLED: '1'
     steps:
@@ -62,6 +66,7 @@ jobs:
     needs: build
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    timeout-minutes: 10 # the Pages deployment's own limit
     permissions:
       pages: write
       id-token: write

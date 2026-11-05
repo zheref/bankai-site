@@ -7,7 +7,7 @@ on:
   pull_request:
   push:
     branches: [main]
-  # sources-refresh.yml dispatches this after a release repin (its push starts no workflow).
+  # sources-refresh.yml dispatches this on its bot/sources-repin branch (a PR opened with the workflow token starts no workflow).
   workflow_dispatch:
 
 permissions:

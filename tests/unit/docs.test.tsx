@@ -1,8 +1,10 @@
 import * as React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { mockStaticQuery, buildStaticData } from '../helpers/staticQuery';
+import { generated } from '../helpers/generated';
 import { docsComponents, DocsDataContext, type DocsData, SkillCatalogue, AgentRoster, LeadAgent, GatesTable, TiersTable, ProfilesTable, HumanPhases, ConfigFiles, NenVerbs, HandbookFamilies, UxRules, Changelog, Versions, NenPin, SourceStamp, Name } from '@/features/docs/DocsComponents';
 import { Snippet } from '@/design/Snippet';
+import { withPrefix } from 'gatsby';
 import { DocsSearch } from '@/features/docs/Search';
 import { DOCS_NAV, docPath } from '@/features/docs/DocsNav';
 import DocPage from '@/templates/DocPage';
@@ -22,11 +24,16 @@ describe('docs data components', () => {
     expect(aka?.querySelector('a')).toHaveAttribute('href', expect.stringContaining('claude/skills/aka/SKILL.md'));
     expect(container.querySelector('[data-skill="shibari"]')).toHaveTextContent('Proposed: musubi');
   });
-  it('renders the lead agent with six modes and the sixteen other agents with aliases', () => {
+  // Counts are read against the collected data, never typed: a release that adds an agent or a mode must not
+  // fail the release-driven refresh (.github/workflows/sources-refresh.yml) on a stale literal.
+  it('renders the lead agent with every mode and every other agent with aliases', () => {
     const { container } = render(<Docs><><LeadAgent /><AgentRoster /></></Docs>);
+    const agents = data.allHatsuAgent.nodes as Array<{ name: string; modes?: unknown[] | null }>;
+    const modes = agents.find((a) => a.name === 'kurapika')?.modes ?? [];
     expect(container.querySelector('#agent-kurapika')).toHaveTextContent('Lead');
-    expect(container.querySelectorAll('#agent-kurapika tbody tr')).toHaveLength(6);
-    expect(container.querySelectorAll('[data-agent]')).toHaveLength(16);
+    expect(modes.length).toBeGreaterThan(0);
+    expect(container.querySelectorAll('#agent-kurapika tbody tr')).toHaveLength(modes.length);
+    expect(container.querySelectorAll('[data-agent]')).toHaveLength(agents.length - 1);
     expect(container.querySelector('[data-agent="feitan"]')).toHaveTextContent('Security');
   });
   it('renders the gates, tiers, profiles, human phases and config tables from the repository', () => {
@@ -43,7 +50,7 @@ describe('docs data components', () => {
     expect(screen.getByTestId('handbook-families')).toHaveTextContent('UX-{n}');
     expect(screen.getAllByText(/^UX-1$/).length).toBe(1);
     expect(screen.getByTestId('changelog-hatsu').querySelectorAll('section').length).toBeGreaterThan(3);
-    expect(screen.getByTestId('changelog-nen')).toHaveTextContent('v0.29.0');
+    expect(screen.getByTestId('changelog-nen')).toHaveTextContent(generated<{ latestTag: string }>('nen.json').latestTag);
     const { unmount } = render(<Docs><Changelog repo="handbooks" /></Docs>);
     expect(screen.getByTestId('changelog-handbooks').querySelectorAll('section').length).toBeGreaterThan(0);
     unmount();
@@ -95,6 +102,16 @@ describe('DocsSearch and DocsNav', () => {
     fireEvent.change(input, { target: { value: 'aka' } });
     await waitFor(() => expect(screen.getByRole('link', { name: /aka · push/ })).toHaveAttribute('href', '/docs/hatsu-guide/#skill-aka'));
     expect(screen.getByRole('list', { name: 'Search results' })).toBeInTheDocument();
+  });
+  it('fetches the index under the site path prefix (a GitHub Pages project site)', async () => {
+    vi.mocked(withPrefix).mockImplementation((path: string) => `/bankai-site${path}`);
+    try {
+      render(<DocsSearch />);
+      fireEvent.focus(screen.getByRole('searchbox'));
+      await waitFor(() => expect(fetch).toHaveBeenCalledWith('/bankai-site/search-index.json'));
+    } finally {
+      vi.mocked(withPrefix).mockImplementation((path: string) => path);
+    }
   });
   it('says No results for a query nothing matches', async () => {
     render(<DocsSearch />);

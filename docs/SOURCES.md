@@ -1,6 +1,6 @@
 # Sources
 
-Every command, version, count, name and factual claim the site shows, with where it was read. The repositories are pinned in `sources.json`; the commits below are the ones the copy was verified against on 2026-11-04. Values marked **build-time** are read by `scripts/sources/collect.mjs` on every build and never typed into a page; values marked **copy** are hand-written from the cited source; values marked **unverified** could not be confirmed in the repositories and are listed for Sergio.
+Every command, version, count, name and factual claim the site shows, with where it was read. `sources.json` holds the **build pins**: what `scripts/sources/fetch.mjs` checks out and the collector reads. For hatsu and nen, `.github/workflows/sources-refresh.yml` proposes each newer published release as a proved repin pull request, so **build-time** values follow every release the maintainer merges. The commits below are a different claim: the ones the hand-written **copy** was verified against, by hand, on 2026-11-04. They do not move with a release repin, and copy is only as current as its last hand verification. Values marked **build-time** are read by `scripts/sources/collect.mjs` on every build and never typed into a page; values marked **copy** are hand-written from the cited source; values marked **unverified** could not be confirmed in the repositories and are listed for Sergio.
 
 | Repository | Commit | Version read | From |
 |---|---|---|---|

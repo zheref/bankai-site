@@ -212,6 +212,44 @@
           "gatsby-*.ts",
           "package.json"
         ]
+      },
+      "economics": {
+        "$comment": "Leorio, advisory only (Hatsu docs/ECONOMICS.md): the site's run-cost surfaces (its CI and deploy workflows, scheduled runs included) and Hatsu's full generic product money globs (lower-case and PascalCase, files and directories, *.tf), case-sensitive and last-segment as Hatsu's own row documents. ECONOMICS section 1's content rows (a cron, a cap or interval value, a model pin, a paid host) raise him with no path.",
+        "persona": "leorio",
+        "tier": "deep",
+        "budget": 1,
+        "paths": [
+          ".github/workflows/**",
+          "**/*billing*",
+          "**/*Billing*",
+          "**/*pricing*",
+          "**/*Pricing*",
+          "**/*price*",
+          "**/*Price*",
+          "**/*subscription*",
+          "**/*Subscription*",
+          "**/*paywall*",
+          "**/*Paywall*",
+          "**/*entitlement*",
+          "**/*Entitlement*",
+          "**/*purchase*",
+          "**/*Purchase*",
+          "**/*payment*",
+          "**/*Payment*",
+          "**/*invoice*",
+          "**/*Invoice*",
+          "**/*quota*",
+          "**/*Quota*",
+          "**/*stripe*",
+          "**/*Stripe*",
+          "**/billing/**",
+          "**/Billing/**",
+          "**/payments/**",
+          "**/Payments/**",
+          "**/paywall/**",
+          "**/Paywall/**",
+          "**/*.tf"
+        ]
       }
     }
   },

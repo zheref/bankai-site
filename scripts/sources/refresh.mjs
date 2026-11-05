@@ -7,19 +7,25 @@
  *
  *   node scripts/sources/refresh.mjs            # report only
  *   node scripts/sources/refresh.mjs --write    # rewrite sources.json (pins and readAt)
+ *   node scripts/sources/refresh.mjs --write --notes <file>   # also write the repin's compare links (the PR body)
  *
  * GITHUB_TOKEN (optional) lifts the API rate limit. Under GitHub Actions it also writes `changed` and `summary`
- * to $GITHUB_OUTPUT for .github/workflows/sources-refresh.yml.
+ * to $GITHUB_OUTPUT for .github/workflows/sources-refresh.yml, and one compare link per repin (the upstream diff
+ * between the old and new pinned commits) to $GITHUB_STEP_SUMMARY.
  */
 import { appendFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { readSources, siteRoot } from './lib.mjs';
-import { decide, formatSources, readRelease, repinEntry, slugOf } from './release.mjs';
+import { checkManifest, decide, formatSources, outputLines, readRelease, repinEntry, slugOf } from './release.mjs';
 
 const write = process.argv.includes('--write');
+const notesAt = process.argv.indexOf('--notes');
+const notes = notesAt > 0 ? process.argv[notesAt + 1] : undefined;
+if (notesAt > 0 && !notes) throw new Error('--notes needs a file path');
 const sources = readSources();
 const token = process.env.GITHUB_TOKEN || process.env.GH_TOKEN || undefined;
 const moved = [];
+const compares = [];
 
 for (const [name, entry] of Object.entries(sources.repos)) {
   if (entry.follow !== 'release') continue;
@@ -29,12 +35,12 @@ for (const [name, entry] of Object.entries(sources.repos)) {
     console.log(`${name}: ${verdict.reason}`);
     continue;
   }
-  if (release.manifestVersion !== null && String(release.manifestVersion).replace(/^v/, '') !== verdict.version) {
-    throw new Error(`${name}: release ${release.tag} carries ${entry.versionFrom.split(' ')[0]} = ${release.manifestVersion}; refusing to pin a release whose manifest disagrees with its tag`);
-  }
+  checkManifest(name, release, verdict.version);
   console.log(`${name}: ${entry.version} → ${verdict.version} (release ${release.tag} at ${release.commit.slice(0, 12)})`);
   sources.repos[name] = repinEntry(entry, { tag: release.tag, version: verdict.version, commit: release.commit });
   moved.push(`${name} ${release.tag}`);
+  // What changed upstream, install snippets included, is one click from the run summary rather than unreviewed.
+  compares.push(`- **${name}** ${entry.version} → ${verdict.version}: ${entry.url}/compare/${entry.commit}...${release.commit}`);
 }
 
 if (moved.length && write) {
@@ -45,6 +51,10 @@ if (moved.length && write) {
   console.log('dry run: pass --write to rewrite sources.json');
 }
 
+if (notes) writeFileSync(notes, compares.length ? `${compares.join('\n')}\n` : '');
+if (process.env.GITHUB_STEP_SUMMARY && compares.length) {
+  appendFileSync(process.env.GITHUB_STEP_SUMMARY, `### Release repin\n\n${compares.join('\n')}\n`);
+}
 if (process.env.GITHUB_OUTPUT) {
-  appendFileSync(process.env.GITHUB_OUTPUT, `changed=${moved.length > 0 && write}\nsummary=${moved.length ? `repin ${moved.join(', ')}` : 'no newer release'}\n`);
+  appendFileSync(process.env.GITHUB_OUTPUT, outputLines(moved, write));
 }

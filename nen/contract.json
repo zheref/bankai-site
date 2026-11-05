@@ -82,7 +82,7 @@
         "why": "The GitHub Pages site built from main: https://zheref.github.io/bankai-site/ until the bankai.zheref.dev custom domain is set in the repository Pages settings (the build reads the served origin and path from actions/configure-pages, so the switch needs no code change)."
       },
       "on-push": {
-        "unsupported": "A merge to main IS the deploy: .github/workflows/pages.yml runs on push, and sources-refresh.yml dispatches it after a release repin. There is no command line for nen to run."
+        "unsupported": "A merge to main IS the deploy: .github/workflows/pages.yml runs on push, and a release repin from sources-refresh.yml lands as a pull request the maintainer merges. There is no command line for nen to run."
       }
     },
     "toolchain": {
