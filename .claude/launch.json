@@ -1,0 +1,7 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    { "name": "serve", "runtimeExecutable": "pnpm", "runtimeArgs": ["exec", "gatsby", "serve", "-p", "9000"], "port": 9000 },
+    { "name": "develop", "runtimeExecutable": "pnpm", "runtimeArgs": ["develop", "-p", "8000"], "port": 8000 }
+  ]
+}

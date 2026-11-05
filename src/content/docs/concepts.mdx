@@ -1,0 +1,35 @@
+---
+slug: concepts
+title: Concepts
+description: The loop, the gates, and the Nen contract.
+order: 2
+data: [gates]
+---
+
+<SourceStamp />
+
+## The loop
+
+Per request, the loop is `ren` (work a request), and it runs without being asked: `breath` (warm up the effort: prove the base tip builds) → `rasengan` (author the change) → `kokusen` (verify the finished tree, then commit) → `amaterasu` (launch handling) → `spiritual-message` (the turn's report) → `jutaisho` (the bell). It loops on every later message. It never pushes and never opens a pull request.
+
+Five phases are yours to call, and no agent ever prompts for them: `aka` (push), `mukai` (review and PR), **the merge**, `kagutsuchi` (non-production upload) and `mugetsu` (publish, G3). Everything between them runs on its own; only a genuine G5 interrupts you: red required tests, touched-file coverage under the ladder, a semantic merge conflict, an unsettled adversarial finding, a stuck-PR escalation.
+
+## The gates
+
+Hatsu drives work **to** a gate and stops there. Clause ids are the governance constitution's.
+
+<GatesTable />
+
+Nothing merges `main` except the release skill merging its own release-proposal PR inside its stated bounds. Nothing casts a review vote. Nothing publishes a release on its own authority: publication runs only on your typed go at G3. No GitHub App, no bot identity.
+
+## The Nen contract
+
+`nen` is a hard, version-ranged, fail-closed dependency with auto-install. Every deterministic step is one of its verbs; there is no improvised fallback for a Nen-owned operation. `nen/contract.json` is the single source of truth for the pin: `dependency.minimum` (the range) and `dependency.pinned_ref` (the build the bootstrap installs) move independently. Absent, the warm-up runs Nen's own checksum-verified bootstrap, fetched to a file, never piped; out of range, it re-pins through the verb; a checksum failure is never retried. The session halts only when the bootstrap itself fails, printing the exact command for you to run.
+
+Hatsu's own pin today:
+
+<NenPin />
+
+## `nen/contract.json`
+
+The file sits where Nen itself looks for a repository's dependency declaration, in Nen's own shape, so Nen validates it (`nen schema check --repo <path>`). Beside the `dependency` block it carries a `project` block: the lanes (one per buildable tree), the per-verb argv for `build`, `test`, `lint`, `coverage`, `archive`, `deploy` and `release`, hosts, deploy targets and launch targets. A verb a lane does not have is declared as an explicit `unsupported` seat with the reason in the repository's own words, because a stated fact is better than a broken declaration. Its policy half, `nen/workflow.json`, states a decision about the work: branch shape, iteration checks, tests, the coverage ladder, reports, notifications, commit trailers, the monitor cap, run profiles and the model matrix. The [Configuration](/docs/configuration/) page lists every file.

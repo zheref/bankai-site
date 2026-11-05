@@ -15,9 +15,6 @@ const config: GatsbyConfig = {
   trailingSlash: 'always',
   plugins: [
     'gatsby-plugin-postcss',
-    'gatsby-plugin-image',
-    'gatsby-plugin-sharp',
-    'gatsby-transformer-sharp',
     'gatsby-source-bankai',
     { resolve: 'gatsby-source-filesystem', options: { name: 'docs', path: `${__dirname}/src/content/docs` } },
     {
@@ -25,6 +22,8 @@ const config: GatsbyConfig = {
       options: {
         extensions: ['.mdx'],
         mdxOptions: { remarkPlugins: [require('remark-gfm')] },
+        // Heading ids, so the table-of-contents links resolve (no anchor icon, no extra markup).
+        gatsbyRemarkPlugins: [{ resolve: 'gatsby-remark-autolink-headers', options: { icon: false, maintainCase: false } }],
       },
     },
     {
@@ -43,11 +42,9 @@ const config: GatsbyConfig = {
         background_color: '#0A0C10',
         theme_color: '#0A0C10',
         display: 'minimal-ui',
-        icons: [
-          { src: 'src/brand/logo/favicon/icon-192.png', sizes: '192x192', type: 'image/png' },
-          { src: 'src/brand/logo/favicon/icon-512.png', sizes: '512x512', type: 'image/png' },
-          { src: 'src/brand/logo/favicon/icon-512-maskable.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
-        ],
+        // The plugin generates the icon set from the brand's 512 px app icon into public/icons/ (no copied binaries).
+        // The maskable variant (src/brand/logo/favicon/icon-512-maskable.png) is a later, explicit addition.
+        icon: 'src/brand/logo/favicon/icon-512.png',
         include_favicon: false,
       },
     },

@@ -39,7 +39,71 @@
     "retain": "final-only",
     "template": "rikugan",
     "$template": "one of: spiritual-message | rikugan",
-    "captures": "Reports/captures"
+    "captures": "Reports/captures",
+    "sections": {
+      "turn": {
+        "template": "spiritual-message",
+        "blocks": [
+          "masthead",
+          "tally",
+          "desk",
+          "lastTurn",
+          "landed",
+          "delta",
+          "evidence",
+          "launch",
+          "decisions"
+        ]
+      },
+      "turn-fast": {
+        "template": "spiritual-message",
+        "blocks": [
+          "masthead",
+          "tally",
+          "desk",
+          "lastTurn"
+        ]
+      },
+      "landing": {
+        "template": "spiritual-message",
+        "blocks": [
+          "masthead",
+          "tally",
+          "desk",
+          "lastTurn",
+          "landed",
+          "delta",
+          "evidence",
+          "spend",
+          "launch",
+          "decisions",
+          "prBody"
+        ]
+      },
+      "final": {
+        "template": "rikugan",
+        "blocks": [
+          "masthead",
+          "tally",
+          "desk",
+          "register",
+          "spend",
+          "legend"
+        ]
+      },
+      "register": {
+        "template": "rikugan",
+        "blocks": [
+          "masthead",
+          "tally",
+          "desk",
+          "register",
+          "spend",
+          "legend"
+        ]
+      }
+    },
+    "$comment": "reports.sections: which blocks each report variant renders (nen report render --variant); copied from Hatsu's catalogue defaults at adoption."
   },
   "notifications": {
     "$comment": "turn decides how loud an ORDINARY (no-gate) turn is: 'rung1' rings only the first rung 'rungs' lists, 'all' rings every rung 'rungs' lists on every turn -- a gate always rings everything 'rungs' lists regardless.",
@@ -376,6 +440,6 @@
         "sha256": "154b9ec48d7ea412f001509af84191569e0782c0f5a6eab12cf7d3c3813d296d"
       }
     },
-    "$sections": "available sections: delivery — Always-first ledger-rendered delivery metadata; outside the seven-reader cap. | changes — Before/After for a named consumer; Case for/Case against; what would flip the decision. | why — Source/What it showed/Why it matters now, followed by the authoring nature. | how — Mermaid structure diagram and Item/Kind/Change legend; flow diagram only when behavior flow changed; one rejected alternative. | improves — All eleven aspects, marked ⬆ improves / ➖ unchanged / ⬇ regresses; justify only movement. | verify — Product: numbered steps. Library: Consumer scenario/Call or import/Expected, plus published artifact command. Process: Behavior changed/Lane or verb run/Refuses on/Passes on. Every kind adds one Criterion/Coverage/Evidence row per AC id of each closing issue (HR-11; judged by nen pr converge). content: an empty heading fails body-check through the derived verify-content requirement. | evidence — UZF-26 state/variant evidence table; only where project.evidence.globs is declared. | compat — Symbol/Before/After/Consumer action; semver verdict. | across — What another repository does differently after this merge; recorded rulings. | release-unit — Artifact/Size/Provenance; CON-22 fan-out. | rollout — Target/Flag/Rollback step. | economics — Leorio summary, then the full report in details; no new level-2 headings inside it. | spec — One row per F<nnn>-SC-### the closing spec-derived issue carries, satisfied with a test id or deferred with a reason and a follow-up (docs/config/spec-repo.md, The PR Spec section). Admitted by the run fact spec; rows is nen's spec-rows requirement quoted whole (zheref/nen#493, src/spec/coverage.ts), and nen spec coverage's delivery form proves every criterion is accounted for. | decisions — Every pre-answered row and every default the run took for the maintainer; mandatory on every PR whose run took one, idle (HR-334) or attended (HA#474 AC-1), whatever the kind or family. Any positive source includes it: --decisions, --idle, or --decisions-from a nen.run manifest with a non-empty idleAnswers. A manifest proves only launch pre-answers: a null or empty idleAnswers adds nothing beside --decisions or --idle (the flag wins) and refuses alone; a malformed manifest refuses whatever else is passed. A default taken mid-run or attended is --decisions. | hanten — Exact adopted-gate heading and settled Hanten findings. Each deferred row cites a tracked issue. | prose — HA#503, HR-369: the four PRS rows (criteria, measurable, scope, markers) Chrollo answers on a canon-prose PR, each with a yes or no verdict and the line he read (line N or path:N), never the author. Admitted by the run fact canon-prose (--canon-prose, or --scopes-from a nen review scopes document in which Chrollo's scope claims a changed .md; the architecture globs in nen/workflow.json are canon prose's one definition); rows requires exactly one answered row per letter under the heading. A no is also a Hanten finding with rule PRS-<letter>, medium and pushable. docs/PR-SECTIONS.md section The prose checklist. | checklist — Compact evidence-backed completion conditions, including the checked Hanten-settled evidence line. | issues — Canonical issue URL/scope/merging verdict table and closing lines; Development guard applies. | attribution — Final heading; exact participant ledger from docs/AGENT-ATTRIBUTION.md."
+    "$sections": "available sections: delivery \u2014 Always-first ledger-rendered delivery metadata; outside the seven-reader cap. | changes \u2014 Before/After for a named consumer; Case for/Case against; what would flip the decision. | why \u2014 Source/What it showed/Why it matters now, followed by the authoring nature. | how \u2014 Mermaid structure diagram and Item/Kind/Change legend; flow diagram only when behavior flow changed; one rejected alternative. | improves \u2014 All eleven aspects, marked \u2b06 improves / \u2796 unchanged / \u2b07 regresses; justify only movement. | verify \u2014 Product: numbered steps. Library: Consumer scenario/Call or import/Expected, plus published artifact command. Process: Behavior changed/Lane or verb run/Refuses on/Passes on. Every kind adds one Criterion/Coverage/Evidence row per AC id of each closing issue (HR-11; judged by nen pr converge). content: an empty heading fails body-check through the derived verify-content requirement. | evidence \u2014 UZF-26 state/variant evidence table; only where project.evidence.globs is declared. | compat \u2014 Symbol/Before/After/Consumer action; semver verdict. | across \u2014 What another repository does differently after this merge; recorded rulings. | release-unit \u2014 Artifact/Size/Provenance; CON-22 fan-out. | rollout \u2014 Target/Flag/Rollback step. | economics \u2014 Leorio summary, then the full report in details; no new level-2 headings inside it. | spec \u2014 One row per F<nnn>-SC-### the closing spec-derived issue carries, satisfied with a test id or deferred with a reason and a follow-up (docs/config/spec-repo.md, The PR Spec section). Admitted by the run fact spec; rows is nen's spec-rows requirement quoted whole (zheref/nen#493, src/spec/coverage.ts), and nen spec coverage's delivery form proves every criterion is accounted for. | decisions \u2014 Every pre-answered row and every default the run took for the maintainer; mandatory on every PR whose run took one, idle (HR-334) or attended (HA#474 AC-1), whatever the kind or family. Any positive source includes it: --decisions, --idle, or --decisions-from a nen.run manifest with a non-empty idleAnswers. A manifest proves only launch pre-answers: a null or empty idleAnswers adds nothing beside --decisions or --idle (the flag wins) and refuses alone; a malformed manifest refuses whatever else is passed. A default taken mid-run or attended is --decisions. | hanten \u2014 Exact adopted-gate heading and settled Hanten findings. Each deferred row cites a tracked issue. | prose \u2014 HA#503, HR-369: the four PRS rows (criteria, measurable, scope, markers) Chrollo answers on a canon-prose PR, each with a yes or no verdict and the line he read (line N or path:N), never the author. Admitted by the run fact canon-prose (--canon-prose, or --scopes-from a nen review scopes document in which Chrollo's scope claims a changed .md; the architecture globs in nen/workflow.json are canon prose's one definition); rows requires exactly one answered row per letter under the heading. A no is also a Hanten finding with rule PRS-<letter>, medium and pushable. docs/PR-SECTIONS.md section The prose checklist. | checklist \u2014 Compact evidence-backed completion conditions, including the checked Hanten-settled evidence line. | issues \u2014 Canonical issue URL/scope/merging verdict table and closing lines; Development guard applies. | attribution \u2014 Final heading; exact participant ledger from docs/AGENT-ATTRIBUTION.md."
   }
 }

@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["dom", "dom.iterable", "ES2022"],
+    "jsx": "react-jsx",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "isolatedModules": true,
+    "allowJs": true,
+    "types": ["node", "vitest/globals", "@testing-library/jest-dom"],
+    "baseUrl": ".",
+    "paths": { "@/*": ["src/*"], "@config": ["site.config.ts"] }
+  },
+  "include": ["src", "site.config.ts", "gatsby-config.ts", "gatsby-node.ts", "gatsby-browser.tsx", "gatsby-ssr.tsx", "tests", "e2e", "vitest.config.ts", "vitest.build.config.ts", "playwright.config.ts"],
+  "exclude": ["node_modules", "public", ".cache", ".sources"]
+}

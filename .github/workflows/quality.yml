@@ -1,0 +1,57 @@
+# Site quality lane: unit tests, the build lane (pricing hidden in production, TBD-tagged in preview),
+# Playwright smoke with axe at 390 px and 1440 px, and Lighthouse (mobile, 95+). The declaration-driven
+# build/test/lint lane is nen-shu.yml. READ-ONLY: this workflow pushes nothing and comments on nothing.
+name: quality
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    env:
+      GATSBY_TELEMETRY_DISABLED: '1'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: source repositories at the pinned commits (tests and builds collect from them; a missing checkout is fetched by the collector too)
+        run: pnpm sources:fetch
+      - name: unit tests with coverage
+        run: pnpm test:coverage
+      - name: build lane (production hides /pricing; SHOW_PRICING=true renders it TBD-tagged)
+        run: pnpm test:build
+      - name: production build for the smoke and Lighthouse runs (a clean public/)
+        run: pnpm build
+      - name: playwright browsers
+        run: pnpm exec playwright install --with-deps chromium
+      - name: smoke + axe (mobile and desktop)
+        run: pnpm test:e2e
+      - name: lighthouse (mobile)
+        run: |
+          pnpm exec gatsby serve -p 9000 &
+          for i in $(seq 1 30); do curl -fsS -o /dev/null http://localhost:9000/ && break; sleep 1; done
+          curl -fsS -o /dev/null http://localhost:9000/
+          # The font-swap layout guard (advisory while the fallback faces settle): which blocks a swap re-flows, and what the runner resolves.
+          FONT_CHECK_ADVISORY=1 node scripts/fonts/check.mjs
+          node scripts/lighthouse.mjs / /docs/ /services/ /docs/changelog/ /docs/nen-reference/
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: reports
+          path: |
+            Reports/lighthouse
+            playwright-report
+            coverage/lcov.info
+          if-no-files-found: ignore

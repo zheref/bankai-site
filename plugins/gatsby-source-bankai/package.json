@@ -1,0 +1,7 @@
+{
+  "name": "gatsby-source-bankai",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Reads src/data/generated/*.json (written by scripts/sources/collect.mjs from the pinned hatsu, nen and bankai-handbooks checkouts) into Gatsby's GraphQL layer.",
+  "main": "gatsby-node.js"
+}

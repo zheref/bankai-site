@@ -1,0 +1,30 @@
+{
+  "$comment": "The source repositories the site reads at build time, pinned to the commit the copy was verified against. scripts/sources/fetch.mjs clones them into .sources/<name> at exactly these commits; scripts/sources/collect.mjs refuses a checkout whose HEAD differs unless BANKAI_SOURCES_ALLOW_DRIFT=1. Every command, version, count, skill, agent and changelog the site shows is read from these trees; see docs/SOURCES.md for the per-claim citation list.",
+  "readAt": "2026-11-04",
+  "repos": {
+    "hatsu": {
+      "url": "https://github.com/zheref/hatsu",
+      "ref": "main",
+      "commit": "3c582c18a4a74119b748c76fbf2aa8ca275ef776",
+      "version": "0.159.0",
+      "versionFrom": ".claude-plugin/plugin.json#version",
+      "reads": ["README.md", "docs/using/*.md", "docs/WORKFLOW.md", "docs/config/README.md", "claude/skills/*/SKILL.md", "claude/agents/*.md", ".claude-plugin/plugin.json", "nen/contract.json", "nen/workflow.json", "CHANGELOG.md"]
+    },
+    "nen": {
+      "url": "https://github.com/zheref/nen",
+      "ref": "main",
+      "commit": "d7a720ddcd5c482da8ab2f40ce678a51828cb7a8",
+      "version": "0.29.0",
+      "versionFrom": "package.json#version (latest tag v0.29.0)",
+      "reads": ["README.md", "docs/USAGE.md", "CHANGELOG.md", "package.json"]
+    },
+    "handbooks": {
+      "url": "https://github.com/zheref/bankai-handbooks",
+      "ref": "main",
+      "commit": "39b8e06d3c662977794a0bfb5c8ced48a18b91ab",
+      "version": "v0.13",
+      "versionFrom": "handbooks/VERSION",
+      "reads": ["README.md", "handbooks/INDEX.md", "handbooks/stack-matrix.md", "handbooks/VERSION", "handbooks/ux-baseline.md", "CHANGELOG.md"]
+    }
+  }
+}

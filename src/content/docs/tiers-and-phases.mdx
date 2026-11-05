@@ -1,0 +1,33 @@
+---
+slug: tiers-and-phases
+title: Tiers and phases
+description: Model tiers, run profiles, the human gates, the phases only a human calls, and CI tiers.
+order: 4
+data: [tiers, profiles, gates, phases, skills]
+---
+
+<SourceStamp />
+
+## Model tiers
+
+A tier is named, never a model version. `nen/workflow.json` → `models` maps four tiers to one alias per surface, and a role to a tier; the live id is read from the surface when a skill runs, never remembered. A subagent never runs on the frontier tier, which is where your own conversation lives.
+
+<TiersTable />
+
+## Run profiles
+
+The run profile the loop reads: `fast`, `standard`, `thorough`. A landing always runs thorough, whatever the turns before it named.
+
+<ProfilesTable />
+
+## The gates
+
+<GatesTable />
+
+## The phases only a human calls
+
+<HumanPhases />
+
+## CI tiers
+
+An adopted repository can also carry CI reviewer lanes, installed by `kuchiyose` (install a CI tier) as one version-controlled PR: it reads the tier catalogue at the pinned provider tag, asks the per-repository rulings, writes the caller workflow and the gate entries, and prints the day-one ceremony that stays yours (the Apps, the secrets, the required-checks ruleset). It never creates an App, sets a secret, applies a ruleset or merges. Hosted, autonomous runs of the whole loop are the future Cloud tier, coming later.
