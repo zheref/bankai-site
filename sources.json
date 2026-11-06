@@ -1,6 +1,6 @@
 {
   "$comment": "The source repositories the site reads at build time: the build pins. They start at the commit the hand-written copy was verified against (docs/SOURCES.md records that commit, which stays put); scripts/sources/fetch.mjs clones them into .sources/<name> at exactly these commits; a repository marked \"follow\": \"release\" is then proposed for repin to its latest published GitHub release by scripts/sources/refresh.mjs, as a pull request from .github/workflows/sources-refresh.yml that the maintainer merges, never to a bare tag and never backwards; scripts/sources/collect.mjs refuses a checkout whose HEAD differs unless BANKAI_SOURCES_ALLOW_DRIFT=1. Every command, version, count, skill, agent and changelog the site shows is read from these trees; see docs/SOURCES.md for the per-claim citation list.",
-  "readAt": "2026-11-04",
+  "readAt": "2026-11-06",
   "repos": {
     "hatsu": {
       "url": "https://github.com/zheref/hatsu",
@@ -14,10 +14,10 @@
     "nen": {
       "url": "https://github.com/zheref/nen",
       "follow": "release",
-      "ref": "main",
-      "commit": "d7a720ddcd5c482da8ab2f40ce678a51828cb7a8",
-      "version": "0.29.0",
-      "versionFrom": "package.json#version (latest tag v0.29.0)",
+      "ref": "v0.30.0",
+      "commit": "1e2217a2fa9735e99e9c83096fff57197361556d",
+      "version": "0.30.0",
+      "versionFrom": "package.json#version (latest tag v0.30.0)",
       "reads": ["README.md", "docs/USAGE.md", "CHANGELOG.md", "package.json"]
     },
     "handbooks": {
