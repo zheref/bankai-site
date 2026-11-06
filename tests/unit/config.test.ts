@@ -27,4 +27,15 @@ describe('site.config.ts', () => {
     expect(siteConfig.github.hatsu).toBe('https://github.com/zheref/hatsu');
     expect(siteConfig.siteUrl).toBe('https://bankai.zheref.dev');
   });
+  it('takes the origin from GATSBY_SITE_URL when the Pages build sets it', async () => {
+    vi.stubEnv('GATSBY_SITE_URL', 'https://zheref.github.io');
+    vi.resetModules();
+    try {
+      const { siteConfig: pages } = await import('@config');
+      expect(pages.siteUrl).toBe('https://zheref.github.io');
+    } finally {
+      vi.unstubAllEnvs();
+      vi.resetModules();
+    }
+  });
 });

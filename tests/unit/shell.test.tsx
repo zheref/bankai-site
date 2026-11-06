@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { render, screen } from '@testing-library/react';
+import { withPrefix } from 'gatsby';
 import { Footer } from '@/features/shell/Footer';
 import { Seo } from '@/features/shell/Seo';
 import { Header } from '@/features/shell/Header';
@@ -57,6 +58,16 @@ describe('Seo', () => {
     const { container } = render(<Seo pathname="/docs/" title="Docs" />);
     expect(container.querySelector('link[rel="canonical"]')).toHaveAttribute('href', 'https://bankai.zheref.dev/docs/');
     expect(container.querySelector('title')).toHaveTextContent('Docs · bankai');
+  });
+  it('carries the Pages path prefix once in the canonical and og:url', () => {
+    vi.mocked(withPrefix).mockImplementation((path: string) => `/bankai-site${path}`);
+    try {
+      const { container } = render(<Seo pathname="/docs/" title="Docs" />);
+      expect(container.querySelector('link[rel="canonical"]')).toHaveAttribute('href', 'https://bankai.zheref.dev/bankai-site/docs/');
+      expect(container.querySelector('meta[property="og:url"]')).toHaveAttribute('content', 'https://bankai.zheref.dev/bankai-site/docs/');
+    } finally {
+      vi.mocked(withPrefix).mockImplementation((path: string) => path);
+    }
   });
 });
 

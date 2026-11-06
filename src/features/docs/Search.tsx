@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Link } from 'gatsby';
+import { Link, withPrefix } from 'gatsby';
 import { t } from '@/library/i18n';
 
 type Entry = { id: string; title: string; text: string; url: string; kind: string };
@@ -21,7 +21,7 @@ export function DocsSearch() {
     if (index || loading.current) return;
     loading.current = true;
     try {
-      const [mod, res] = await Promise.all([import('flexsearch'), fetch('/search-index.json')]);
+      const [mod, res] = await Promise.all([import('flexsearch'), fetch(withPrefix('/search-index.json'))]);
       if (!res.ok) throw new Error(`search index: HTTP ${res.status}`);
       const Document = (mod as { Document?: unknown; default?: { Document?: unknown } }).Document ?? (mod as { default?: { Document?: unknown } }).default?.Document;
       if (typeof Document !== 'function') throw new Error('search: FlexSearch Document is unavailable');

@@ -1,6 +1,6 @@
 # Sources
 
-Every command, version, count, name and factual claim the site shows, with where it was read. The repositories are pinned in `sources.json`; the commits below are the ones the copy was verified against on 2026-11-04. Values marked **build-time** are read by `scripts/sources/collect.mjs` on every build and never typed into a page; values marked **copy** are hand-written from the cited source; values marked **unverified** could not be confirmed in the repositories and are listed for Sergio.
+Every command, version, count, name and factual claim the site shows, with where it was read. `sources.json` holds the **build pins**: what `scripts/sources/fetch.mjs` checks out and the collector reads. For hatsu and nen, `.github/workflows/sources-refresh.yml` proposes each newer published release as a proved repin pull request, so **build-time** values follow every release the maintainer merges. The commits below are a different claim: the ones the hand-written **copy** was verified against, by hand, on 2026-11-04. They do not move with a release repin, and copy is only as current as its last hand verification. Values marked **build-time** are read by `scripts/sources/collect.mjs` on every build and never typed into a page; values marked **copy** are hand-written from the cited source; values marked **unverified** could not be confirmed in the repositories and are listed for Sergio.
 
 | Repository | Commit | Version read | From |
 |---|---|---|---|
@@ -61,8 +61,7 @@ Internal codenames inside repository prose are replaced by the configured Cloud 
 
 - **ValleIA's site URL**: not in any repository or document read; `site.config.ts` → `services.providerUrl` is unset and the section renders a TBD badge instead of a link. The contact CTA points at the maintainer's GitHub profile until a route is decided.
 - **A waitlist URL** for the Cloud tier teaser: unset; the teaser renders "A waitlist opens later" instead of a form.
-- **The site's own GitHub URL** (`https://github.com/zheref/bankai-site`): the name is decided; the remote does not exist yet.
 - **Trial length** for the Cloud tier: TBD, rendered as `—`.
-- **Hosting** for bankai.zheref.dev: TBD; the `deploy` verb is an `unsupported` seat until a target is declared.
+- **The custom domain** bankai.zheref.dev: GitHub Pages hosts the site (`.github/workflows/pages.yml`, the `github-pages` deploy target); until the domain's DNS record and the Pages custom-domain setting exist, it is served at https://zheref.github.io/bankai-site/.
 - **"Hosted, autonomous runs in your org, GitHub App agents, managed or self-hosted runners"** as the Cloud tier's rows: from the build prompt; no public repository describes the tier.
 - **The stage list** (which skills belong to which SDLC stage): the build prompt's grouping; the hatsu README groups skills by call site, not by SDLC stage.

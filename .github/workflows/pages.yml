@@ -1,0 +1,78 @@
+# GitHub Pages: build the static site from main and deploy it. A merge to main IS the deploy (the `on-push`
+# target in nen/contract.json); `nen shu deploy --target github-pages --run` re-runs it on demand through
+# workflow_dispatch. A release repin from .github/workflows/sources-refresh.yml reaches here the same way as any
+# other change: as a pull request the maintainer merges.
+#
+# The base path is GitHub's, not this file's: actions/configure-pages reports the origin and path the site is
+# served from -- https://zheref.github.io + /bankai-site until a custom domain is set, the custom domain + an
+# empty path after -- and the build takes both, so switching to bankai.zheref.dev is a Pages setting and a DNS
+# record, never an edit here.
+name: pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# One deploy at a time, and never cancel one half-way: a newer run waits for the older to land.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      pages: read # actions/configure-pages reads the site's origin and base path from the Pages API
+    env:
+      GATSBY_TELEMETRY_DISABLED: '1'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: source repositories at the pinned commits
+        run: pnpm sources:fetch
+      - id: pages
+        uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
+      - name: build (production flags; the pricing page stays unbuilt)
+        env:
+          PAGES_ORIGIN: ${{ steps.pages.outputs.origin }}
+          PAGES_BASE_PATH: ${{ steps.pages.outputs.base_path }}
+        run: |
+          export GATSBY_SITE_URL="${PAGES_ORIGIN}"
+          if [ -n "${PAGES_BASE_PATH}" ]; then
+            export PATH_PREFIX="${PAGES_BASE_PATH}" PREFIX_PATHS=true
+          fi
+          echo "origin=${GATSBY_SITE_URL} prefix=${PATH_PREFIX:-<none>}"
+          pnpm build
+          # Every root-absolute URL under the prefix exactly once, canonical and sitemap too (no prefix: a no-op).
+          node scripts/pages/check-prefix.mjs
+      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: public
+
+  deploy:
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10 # the Pages deployment's own limit
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1

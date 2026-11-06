@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { withPrefix } from 'gatsby';
 import { siteConfig } from '@config';
 import { t } from '@/library/i18n';
 import tokens from '@/brand/tokens.json';
@@ -7,7 +8,7 @@ import tokens from '@/brand/tokens.json';
 export function Seo({ title, description, pathname = '/', noindex = false }: { title?: string; description?: string; pathname?: string; noindex?: boolean }) {
   const full = title ? t('meta.titleTemplate', 'en', { title }) : t('meta.title');
   const desc = description ?? t('meta.description');
-  const url = `${siteConfig.siteUrl}${pathname}`;
+  const url = `${siteConfig.siteUrl}${withPrefix(pathname)}`;
   return (
     <>
       <title>{full}</title>
