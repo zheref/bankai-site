@@ -13,7 +13,7 @@ on:
   # .github/workflows/sources-refresh.yml dispatches this lane on its bot/sources-repin branch: the pull_request run
   # of the repin PR it opens with the workflow token waits for approval, and its empty check suite hides any other
   # run of this workflow on the PR. A dispatched run therefore reports its result as a commit status (the `report`
-  # job), which the PR always shows.
+  # job) the PR shows once the lane finishes.
   workflow_dispatch:
 
 # READ-ONLY BY DECLARATION. This workflow fetches a pinned nen release over
@@ -89,6 +89,7 @@ jobs:
   # A dispatched run only: the lane's result as the `nen shu` commit status on the commit it tested, linked to this
   # run. The one write in this workflow, a status, in its own job so the lane above keeps a read-only token.
   report:
+    name: report (dispatched runs only)
     needs: shu
     if: always() && github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest

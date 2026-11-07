@@ -10,7 +10,7 @@ on:
     branches: [main]
   # sources-refresh.yml dispatches this on its bot/sources-repin branch: the pull_request run of a PR the workflow token
   # opened waits for approval, and its empty check suite hides any other run of this workflow on the PR. A dispatched
-  # run therefore reports its result as a commit status (the `report` job), which the PR always shows.
+  # run therefore reports its result, once it finishes, as a commit status (the `report` job) the PR shows.
   workflow_dispatch:
 
 permissions:
@@ -64,6 +64,7 @@ jobs:
   # A dispatched run only: the lane's result as the `quality` commit status on the commit it tested, linked to this
   # run. The one write in this workflow, a status, in its own job so the lane above keeps a read-only token.
   report:
+    name: report (dispatched runs only)
     needs: quality
     if: always() && github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest

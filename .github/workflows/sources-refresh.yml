@@ -13,13 +13,13 @@
 #            scripts/sources/verify-repin.mjs (no dependencies) refuses anything but a pin move, then the commit is
 #            pushed to bot/sources-repin and one pull request is opened (or refreshed) against main. quality.yml and
 #            nen-shu.yml are dispatched on that branch, because the pull_request runs of a PR the workflow token opened
-#            wait for approval; each dispatched lane posts its result as a commit status the PR shows (the lanes'
-#            `report` jobs). The maintainer's merge is the deploy (pages.yml
+#            wait for approval; each dispatched lane, once it finishes, posts its result as the `quality` or `nen shu`
+#            commit status the PR shows (the lanes' `report` jobs). The maintainer's merge is the deploy (pages.yml
 #            runs on the push to main).
 # To decline a release, close the PR and keep the branch: the next run finds the same pins already proposed and
 # skips. Deleting the branch re-proposes on the next run, and so does a proposal that never finished (no PR, or an
-# open PR with no check runs at its head). A red proof or a refused landing proposes nothing and
-# fails the run, which GitHub reports to the maintainer.
+# open PR whose head carries neither both lane statuses nor a lane still running). A red proof or a refused landing
+# proposes nothing and fails the run, which GitHub reports to the maintainer.
 #
 # Repository setting this needs: Settings → Actions → General → "Allow GitHub Actions to create and approve pull
 # requests". Without it the PR step fails loudly and nothing reaches main.
@@ -55,7 +55,8 @@ jobs:
     permissions:
       contents: read
       pull-requests: read # read the proposal PR's state
-      checks: read # read whether the proposal's lanes ran at its head
+      checks: read # read whether a proposal lane is still running at its head
+      statuses: read # read whether both proposal lanes reported at its head
     env:
       GATSBY_TELEMETRY_DISABLED: '1'
     outputs:
@@ -84,8 +85,10 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         # Matching branch pins alone are not a finished proposal: the branch is pushed before the PR is opened and
         # the lanes dispatched, so a failed land leaves the branch behind. Skip only when the pins match AND the
-        # proposal completed -- a CLOSED PR (the maintainer declined it), or an OPEN one whose head carries check
-        # runs. Anything less (no PR at all, or an open PR with no runs at its head) lands again.
+        # proposal completed -- a CLOSED PR (the maintainer declined it), or an OPEN one whose head carries both the
+        # `quality` and `nen shu` statuses (whatever their state: a red lane is a finished proposal the maintainer
+        # reads) or a check run still in progress (its status follows). Anything less -- no PR, a dispatch that never
+        # ran, or a lane whose status POST failed -- lands again, so the PR is never left reading "no checks".
         run: |
           fresh=true
           if gh api "repos/${GITHUB_REPOSITORY}/contents/sources.json?ref=${PROPOSAL_BRANCH}" --jq .content > "${RUNNER_TEMP}/proposed.b64" 2>/dev/null \
@@ -96,8 +99,13 @@ jobs:
             head=${pr#* }
             if [ "${state}" = CLOSED ]; then
               fresh=false
-            elif [ "${state}" = OPEN ] && [ "$(gh api "repos/${GITHUB_REPOSITORY}/commits/${head}/check-runs" --jq .total_count)" -gt 0 ]; then
-              fresh=false
+            elif [ "${state}" = OPEN ]; then
+              reported=$(gh api "repos/${GITHUB_REPOSITORY}/commits/${head}/status" --jq '[.statuses[].context] | (index("quality") != null and index("nen shu") != null)')
+              running=$(gh api "repos/${GITHUB_REPOSITORY}/commits/${head}/check-runs?filter=latest&per_page=100" --jq '[.check_runs[] | select(.status != "completed")] | length')
+              if [ "${reported}" = true ] || [ "${running}" -gt 0 ]; then
+                fresh=false
+              fi
+              echo "lane statuses reported: ${reported}; check runs still running: ${running}"
             fi
             echo "proposal: ${pr:-none}; land again: ${fresh}"
           fi
