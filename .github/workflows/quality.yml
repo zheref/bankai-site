@@ -1,13 +1,16 @@
 # Site quality lane: unit tests, the build lane (pricing hidden in production, TBD-tagged in preview),
 # Playwright smoke with axe at 390 px and 1440 px, and Lighthouse (mobile, 95+). The declaration-driven
-# build/test/lint lane is nen-shu.yml. READ-ONLY: this workflow pushes nothing and comments on nothing.
+# build/test/lint lane is nen-shu.yml. READ-ONLY: this workflow pushes nothing and comments on nothing; a dispatched
+# run posts one commit status (the `report` job).
 name: quality
 
 on:
   pull_request:
   push:
     branches: [main]
-  # sources-refresh.yml dispatches this on its bot/sources-repin branch (a PR opened with the workflow token starts no workflow).
+  # sources-refresh.yml dispatches this on its bot/sources-repin branch: the pull_request run of a PR the workflow token
+  # opened waits for approval, and its empty check suite hides any other run of this workflow on the PR. A dispatched
+  # run therefore reports its result as a commit status (the `report` job), which the PR always shows.
   workflow_dispatch:
 
 permissions:
@@ -57,3 +60,23 @@ jobs:
             playwright-report
             coverage/lcov.info
           if-no-files-found: ignore
+
+  # A dispatched run only: the lane's result as the `quality` commit status on the commit it tested, linked to this
+  # run. The one write in this workflow, a status, in its own job so the lane above keeps a read-only token.
+  report:
+    needs: quality
+    if: always() && github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    permissions:
+      statuses: write
+    steps:
+      - env:
+          GH_TOKEN: ${{ github.token }}
+          RESULT: ${{ needs.quality.result }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          case "${RESULT}" in success) state=success ;; cancelled) state=error ;; *) state=failure ;; esac
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
+            -f state="${state}" -f context=quality -f target_url="${RUN_URL}" \
+            -f description="quality lane (dispatched): ${RESULT}" --silent

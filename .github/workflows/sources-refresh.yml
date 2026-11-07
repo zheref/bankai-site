@@ -12,8 +12,9 @@
 #   land  -- write. Installs and builds nothing: on a bare checkout of the exact main commit prove started from,
 #            scripts/sources/verify-repin.mjs (no dependencies) refuses anything but a pin move, then the commit is
 #            pushed to bot/sources-repin and one pull request is opened (or refreshed) against main. quality.yml and
-#            nen-shu.yml are dispatched on that branch, because a pull request opened with the workflow token starts
-#            no workflow; their runs show on the PR's head commit. The maintainer's merge is the deploy (pages.yml
+#            nen-shu.yml are dispatched on that branch, because the pull_request runs of a PR the workflow token opened
+#            wait for approval; each dispatched lane posts its result as a commit status the PR shows (the lanes'
+#            `report` jobs). The maintainer's merge is the deploy (pages.yml
 #            runs on the push to main).
 # To decline a release, close the PR and keep the branch: the next run finds the same pins already proposed and
 # skips. Deleting the branch re-proposes on the next run, and so does a proposal that never finished (no PR, or an
@@ -173,7 +174,7 @@ jobs:
             echo
             cat "${RUNNER_TEMP}/proved/repin-notes.md"
             echo
-            echo "Proved in the read-only prove job: the collector at the new commits, the unit tests and the build lane. \`scripts/sources/verify-repin.mjs\` confirmed only release pins moved. The quality and \`nen shu\` lanes are dispatched on this branch and report on its head commit."
+            echo "Proved in the read-only prove job: the collector at the new commits, the unit tests and the build lane. \`scripts/sources/verify-repin.mjs\` confirmed only release pins moved. The quality and \`nen shu\` lanes are dispatched on this branch and report as the \`quality\` and \`nen shu\` commit statuses on this PR; the \`pull_request\` runs GitHub holds for approval are not needed."
             echo
             echo "**Merging deploys the site** (\`pages.yml\` runs on the push to \`main\`). To decline this release, close the PR and keep the branch; the next run sees the same pins already proposed and skips."
           } > "${RUNNER_TEMP}/pr-body.md"

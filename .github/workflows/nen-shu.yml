@@ -10,13 +10,16 @@ on:
   pull_request:
   push:
     branches: [main]
-  # .github/workflows/sources-refresh.yml dispatches this lane on its bot/sources-repin branch: the repin pull
-  # request it opens with the workflow token starts no workflow on its own.
+  # .github/workflows/sources-refresh.yml dispatches this lane on its bot/sources-repin branch: the pull_request run
+  # of the repin PR it opens with the workflow token waits for approval, and its empty check suite hides any other
+  # run of this workflow on the PR. A dispatched run therefore reports its result as a commit status (the `report`
+  # job), which the PR always shows.
   workflow_dispatch:
 
 # READ-ONLY BY DECLARATION. This workflow fetches a pinned nen release over
 # plain HTTPS and runs `nen shu` verbs against the checkout; it pushes nothing,
-# comments on nothing and opens nothing. Saying so here means a step that later
+# comments on nothing and opens nothing (a dispatched run's one commit status is
+# the `report` job's, with its own token). Saying so here means a step that later
 # grew a write fails loudly instead of inheriting whatever this repository's
 # default token permission happens to be.
 permissions:
@@ -82,3 +85,23 @@ jobs:
               exit "${status}"
             done
           done
+
+  # A dispatched run only: the lane's result as the `nen shu` commit status on the commit it tested, linked to this
+  # run. The one write in this workflow, a status, in its own job so the lane above keeps a read-only token.
+  report:
+    needs: shu
+    if: always() && github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    permissions:
+      statuses: write
+    steps:
+      - env:
+          GH_TOKEN: ${{ github.token }}
+          RESULT: ${{ needs.shu.result }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          case "${RESULT}" in success) state=success ;; cancelled) state=error ;; *) state=failure ;; esac
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
+            -f state="${state}" -f context="nen shu" -f target_url="${RUN_URL}" \
+            -f description="nen shu lane (dispatched): ${RESULT}" --silent
