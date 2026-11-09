@@ -1,8 +1,9 @@
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { parseVersion, compareVersions, slugOf, versionSource, decide, repinEntry, formatSources, readRelease, checkRepin, checkManifest, outputLines, samePins } from '../../scripts/sources/release.mjs';
+import { read } from '../../scripts/sources/lib.mjs';
 
 const sourcesPath = resolve(__dirname, '..', '..', 'sources.json');
 
@@ -67,9 +68,22 @@ describe('refresh driver refusals and outputs', () => {
     expect(() => checkManifest('nen', { tag: 'v0.30.0', manifestVersion: 'v0.30.0' }, '0.30.0')).not.toThrow();
     expect(() => checkManifest('nen', { tag: 'v0.30.0', manifestVersion: '0.29.0' }, '0.30.0')).toThrow(/manifest disagrees with its tag/);
     expect(() => checkManifest('handbooks', { tag: 'v1.0.0', manifestVersion: null }, '1.0.0')).not.toThrow();
-    expect(() => checkManifest('handbooks', { tag: 'v0.11.0', manifestVersion: 'v0.11' }, '0.11.0')).not.toThrow();
-    expect(() => checkManifest('handbooks', { tag: 'v0.12.0', manifestVersion: 'v0.11' }, '0.12.0')).toThrow(/manifest disagrees with its tag/);
-    expect(() => checkManifest('handbooks', { tag: 'v0.12.0', manifestVersion: 'twelve' }, '0.12.0')).toThrow(/manifest disagrees with its tag/);
+  });
+  it('keeps a JSON manifest exact: 0.31 does not vouch for tag v0.31.0', () => {
+    expect(() => checkManifest('nen', { tag: 'v0.31.0', manifestVersion: '0.31', manifestFormat: 'json' }, '0.31.0')).toThrow(/manifest disagrees with its tag/);
+    expect(() => checkManifest('nen', { tag: 'v0.31.0', manifestVersion: ' 0.31.0', manifestFormat: 'json' }, '0.31.0')).toThrow(/manifest disagrees with its tag/);
+  });
+  it('lets a plain-text VERSION vouch for the components it declares, so a patch release that leaves it alone still lands', () => {
+    const text = (manifestVersion: string) => ({ tag: 'v?', manifestVersion, manifestFormat: 'text' });
+    expect(() => checkManifest('handbooks', text('v0.11'), '0.11.0')).not.toThrow();
+    expect(() => checkManifest('handbooks', text('v0.13'), '0.13.1')).not.toThrow();
+    expect(() => checkManifest('handbooks', text('v0.13.1'), '0.13.1')).not.toThrow();
+    expect(() => checkManifest('handbooks', text('v0.13.1'), '0.13.2')).toThrow(/manifest disagrees with its tag/);
+    expect(() => checkManifest('handbooks', text('v0.11'), '0.12.0')).toThrow(/manifest disagrees with its tag/);
+    expect(() => checkManifest('handbooks', text('twelve'), '0.12.0')).toThrow(/manifest disagrees with its tag/);
+  });
+  it('quotes a refused manifest, so upstream bytes never reach the Actions log as a workflow command', () => {
+    expect(() => checkManifest('handbooks', { tag: 'v0.14.0', manifestVersion: 'v0.14\n::error::forged', manifestFormat: 'text' }, '0.14.0')).toThrow('carries manifest version "v0.14\\n::error::forged"');
   });
   it('writes the step outputs the workflow reads', () => {
     expect(outputLines([], true)).toBe('changed=false\nsummary=no newer release\n');
@@ -99,7 +113,7 @@ describe('readRelease', () => {
       '/commits/v0.30.0': { body: { sha } },
       [`/contents/package.json?ref=${sha}`]: { body: { content } },
     });
-    expect(await readRelease('zheref/nen', { token: 't0k', versionFrom: 'package.json#version', fetchImpl: asFetch(fetchImpl) })).toEqual({ tag: 'v0.30.0', commit: sha, publishedAt: '2026-11-05T12:01:57Z', manifestVersion: '0.30.0' });
+    expect(await readRelease('zheref/nen', { token: 't0k', versionFrom: 'package.json#version', fetchImpl: asFetch(fetchImpl) })).toEqual({ tag: 'v0.30.0', commit: sha, publishedAt: '2026-11-05T12:01:57Z', manifestVersion: '0.30.0', manifestFormat: 'json' });
     expect(fetchImpl.mock.calls[0]?.[1]?.headers?.authorization).toBe('Bearer t0k');
   });
   it('refuses a release whose named manifest carries no version', async () => {
@@ -117,7 +131,7 @@ describe('readRelease', () => {
       '/commits/v0.14.0': { body: { sha } },
       [`/contents/handbooks/VERSION?ref=${sha}`]: { body: { content: Buffer.from(text).toString('base64') } },
     });
-    expect(await readRelease('zheref/bankai-handbooks', { versionFrom: 'handbooks/VERSION', fetchImpl: asFetch(read('v0.14\n')) })).toMatchObject({ tag: 'v0.14.0', commit: sha, manifestVersion: 'v0.14' });
+    expect(await readRelease('zheref/bankai-handbooks', { versionFrom: 'handbooks/VERSION', fetchImpl: asFetch(read('v0.14\n')) })).toMatchObject({ tag: 'v0.14.0', commit: sha, manifestVersion: 'v0.14', manifestFormat: 'text' });
     await expect(readRelease('zheref/bankai-handbooks', { versionFrom: 'handbooks/VERSION', fetchImpl: asFetch(read('  \n')) })).rejects.toThrow(/has no version/);
   });
   it('fails loudly on an API error or a tag that names no commit', async () => {
@@ -139,6 +153,21 @@ describe('checkRepin (the landing gate)', () => {
 
   it('lands a pin move of a followed repository and nothing else', () => {
     expect(checkRepin(sources, repinned())).toEqual([]);
+  });
+  it('lands a handbooks repin from main (version v0.13) to a release tag', () => {
+    const after = structuredClone(sources);
+    after.readAt = '2026-11-10';
+    after.repos.handbooks = repinEntry(after.repos.handbooks, { tag: 'v0.14.0', version: '0.14.0', commit: sha });
+    expect(checkRepin(sources, after)).toEqual([]);
+  });
+  it('refuses a versionFrom changed beyond its latest-tag note, which would switch the manifest check off', () => {
+    const off = repinned();
+    off.repos.nen.versionFrom = '';
+    expect(checkRepin(sources, off)).toContain('nen.versionFrom changed');
+    const handbooks = structuredClone(sources);
+    handbooks.readAt = '2026-11-10';
+    handbooks.repos.handbooks = { ...repinEntry(handbooks.repos.handbooks, { tag: 'v0.14.0', version: '0.14.0', commit: sha }), versionFrom: 'x.json' };
+    expect(checkRepin(sources, handbooks)).toContain('handbooks.versionFrom changed');
   });
   it('refuses when nothing moved', () => {
     expect(checkRepin(sources, sources)).toContain('no repository moved');
@@ -277,5 +306,21 @@ describe('the scripts, in-process', () => {
     expect(pins.main([sourcesPath, sourcesPath], quiet)).toBe(0);
     expect(pins.main([sourcesPath, movedPath], quiet)).toBe(1);
     expect(pins.main([sourcesPath], quiet)).toBe(2);
+  });
+});
+
+describe('read (the collector reads only inside a checkout)', () => {
+  it('reads a file in the checkout and refuses a symlink that leads outside it', () => {
+    const root = mkdtempSync(join(tmpdir(), 'bankai-read-'));
+    const checkout = join(root, 'handbooks');
+    mkdirSync(checkout);
+    writeFileSync(join(root, 'outside.txt'), 'not the checkout');
+    writeFileSync(join(checkout, 'README.md'), '# handbooks\n');
+    symlinkSync('README.md', join(checkout, 'INDEX.md'));
+    symlinkSync(join('..', 'outside.txt'), join(checkout, 'CHANGELOG.md'));
+    expect(read(checkout, 'README.md')).toBe('# handbooks\n');
+    expect(read(checkout, 'INDEX.md')).toBe('# handbooks\n');
+    expect(() => read(checkout, 'CHANGELOG.md')).toThrow(/resolves outside the checkout/);
+    expect(() => read(checkout, '../outside.txt')).toThrow(/resolves outside the checkout/);
   });
 });
