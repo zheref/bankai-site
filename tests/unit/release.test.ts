@@ -154,20 +154,29 @@ describe('checkRepin (the landing gate)', () => {
   it('lands a pin move of a followed repository and nothing else', () => {
     expect(checkRepin(sources, repinned())).toEqual([]);
   });
+  // A fixed pre-repin baseline, not the live pin: the refresh rewrites sources.json before it runs these tests, so a
+  // baseline read from the file would already sit at the tag a real handbooks repin moved it to.
+  const handbooksAtMain = () => {
+    const before = structuredClone(sources);
+    before.repos.handbooks = { ...before.repos.handbooks, ref: 'main', commit: '39b8e06d3c662977794a0bfb5c8ced48a18b91ab', version: 'v0.13' };
+    return before;
+  };
   it('lands a handbooks repin from main (version v0.13) to a release tag', () => {
-    const after = structuredClone(sources);
+    const before = handbooksAtMain();
+    const after = structuredClone(before);
     after.readAt = '2026-11-10';
     after.repos.handbooks = repinEntry(after.repos.handbooks, { tag: 'v0.14.0', version: '0.14.0', commit: sha });
-    expect(checkRepin(sources, after)).toEqual([]);
+    expect(checkRepin(before, after)).toEqual([]);
   });
   it('refuses a versionFrom changed beyond its latest-tag note, which would switch the manifest check off', () => {
     const off = repinned();
     off.repos.nen.versionFrom = '';
     expect(checkRepin(sources, off)).toContain('nen.versionFrom changed');
-    const handbooks = structuredClone(sources);
+    const before = handbooksAtMain();
+    const handbooks = structuredClone(before);
     handbooks.readAt = '2026-11-10';
     handbooks.repos.handbooks = { ...repinEntry(handbooks.repos.handbooks, { tag: 'v0.14.0', version: '0.14.0', commit: sha }), versionFrom: 'x.json' };
-    expect(checkRepin(sources, handbooks)).toContain('handbooks.versionFrom changed');
+    expect(checkRepin(before, handbooks)).toEqual(['handbooks.versionFrom changed']);
   });
   it('refuses when nothing moved', () => {
     expect(checkRepin(sources, sources)).toContain('no repository moved');
