@@ -1,7 +1,8 @@
 # Keep the site on the latest PUBLISHED release of every source repository sources.json marks
-# "follow": "release" (hatsu and nen). A bare tag never moves a pin: GitHub's releases/latest answers only a
-# published release that is neither a draft nor a prerelease, and a pin ahead of the latest release is never
-# moved back (scripts/sources/release.mjs).
+# "follow": "release" (hatsu, nen and the handbooks). A bare tag never moves a pin: GitHub's releases/latest
+# answers only a published release that is neither a draft nor a prerelease, a pin ahead of the latest release is
+# never moved back, and a release whose versionFrom manifest disagrees with its tag is refused
+# (scripts/sources/release.mjs).
 #
 # The repin is PROPOSED, never merged: only the human merges to main (CON-5; the maintainer's ruling
 # R-2026-11-05-01 on this workflow picked a repin pull request over a direct push). Two jobs, so the dependency

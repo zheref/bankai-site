@@ -29,10 +29,16 @@ export function slugOf(url) {
   return m[1];
 }
 
-/** `package.json#version (latest tag v0.29.0)` → { path: 'package.json', key: 'version' }; null when the entry names no JSON file. */
+/**
+ * `package.json#version (latest tag v0.29.0)` → { path: 'package.json', key: 'version' }; `handbooks/VERSION` → { path:
+ * 'handbooks/VERSION', key: null }, a plain-text file that is the version itself; null when the entry names no file.
+ */
 export function versionSource(versionFrom) {
-  const m = String(versionFrom ?? '').match(/^([^\s#]+\.json)#([\w.]+)/);
-  return m ? { path: m[1], key: m[2] } : null;
+  const s = String(versionFrom ?? '');
+  const json = s.match(/^([^\s#]+\.json)#([\w.]+)/);
+  if (json) return { path: json[1], key: json[2] };
+  const text = s.match(/^([^\s#]+)(?:\s|$)/);
+  return text && !text[1].endsWith('.json') ? { path: text[1], key: null } : null;
 }
 
 /** Whether a release moves a pin: only a strictly newer version does, so a pin ahead of the latest release (main read before a cut) is never moved back. */
@@ -50,10 +56,14 @@ export function repinEntry(entry, { tag, version, commit }) {
   return { ...entry, ref: tag, commit, version, ...(entry.versionFrom === undefined ? {} : { versionFrom }) };
 }
 
-/** Refuses a release whose manifest version (read at its tag's commit) is not the tag's version; null means no manifest was named. */
+/**
+ * Refuses a release whose manifest version (read at its tag's commit) is not the tag's version; null means no manifest
+ * was named. Compared as MAJOR.MINOR[.PATCH], so the handbooks' `v0.11` VERSION file vouches for tag v0.11.0, and a
+ * manifest version that does not parse is refused like a disagreeing one.
+ */
 export function checkManifest(name, release, version) {
   if (release.manifestVersion === null || release.manifestVersion === undefined) return;
-  if (String(release.manifestVersion).replace(/^v/, '') !== version) {
+  if (!parseVersion(release.manifestVersion) || compareVersions(release.manifestVersion, version) !== 0) {
     throw new Error(`${name}: release ${release.tag} carries manifest version ${release.manifestVersion}; refusing to pin a release whose manifest disagrees with its tag`);
   }
 }
@@ -130,10 +140,11 @@ export async function readRelease(slug, { token, versionFrom, fetchImpl = fetch 
   const source = versionSource(versionFrom);
   if (source) {
     const file = await get(`https://api.github.com/repos/${slug}/contents/${source.path}?ref=${commit}`);
-    const json = JSON.parse(Buffer.from(file.content, 'base64').toString('utf8'));
-    manifestVersion = source.key.split('.').reduce((o, k) => (o == null ? o : o[k]), json) ?? null;
+    const text = Buffer.from(file.content, 'base64').toString('utf8');
+    if (source.key === null) manifestVersion = text.trim() || null;
+    else manifestVersion = source.key.split('.').reduce((o, k) => (o == null ? o : o[k]), JSON.parse(text)) ?? null;
     // A manifest that names no version cannot vouch for the tag: refuse rather than skip the comparison.
-    if (manifestVersion === null) throw new Error(`${slug}: ${source.path} at ${tag} has no ${source.key}`);
+    if (manifestVersion === null) throw new Error(`${slug}: ${source.path} at ${tag} has no ${source.key ?? 'version'}`);
   }
   return { tag, commit, publishedAt: latest.published_at ?? null, manifestVersion };
 }

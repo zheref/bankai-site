@@ -26,7 +26,9 @@ describe('release-driven repin', () => {
     expect(() => slugOf('https://gitlab.com/a/b')).toThrow(/github\.com/);
     expect(versionSource('package.json#version (latest tag v0.29.0)')).toEqual({ path: 'package.json', key: 'version' });
     expect(versionSource('.claude-plugin/plugin.json#version')).toEqual({ path: '.claude-plugin/plugin.json', key: 'version' });
-    expect(versionSource('handbooks/VERSION')).toBeNull();
+    expect(versionSource('handbooks/VERSION')).toEqual({ path: 'handbooks/VERSION', key: null });
+    expect(versionSource('package.json')).toBeNull();
+    expect(versionSource('')).toBeNull();
   });
   it('repins only on a strictly newer published release, never backwards', () => {
     const entry = { version: '0.29.0' };
@@ -45,11 +47,17 @@ describe('release-driven repin', () => {
     const text = readFileSync(sourcesPath, 'utf8');
     expect(formatSources(JSON.parse(text))).toBe(text);
   });
-  it('marks hatsu and nen as release-followed and leaves the handbooks pinned by hand', () => {
+  it('marks hatsu, nen and the handbooks as release-followed', () => {
     const sources = JSON.parse(readFileSync(sourcesPath, 'utf8'));
     expect(sources.repos.hatsu.follow).toBe('release');
     expect(sources.repos.nen.follow).toBe('release');
-    expect(sources.repos.handbooks.follow).toBeUndefined();
+    expect(sources.repos.handbooks.follow).toBe('release');
+  });
+  it('holds the handbooks pin while their latest release is older, and repins on a newer one', () => {
+    const handbooks = { version: 'v0.13' };
+    expect(decide(handbooks, { tag: 'v0.11.0' })).toMatchObject({ action: 'skip', reason: 'pinned v0.13 is ahead of release v0.11.0' });
+    expect(decide(handbooks, { tag: 'v0.13.0' })).toMatchObject({ action: 'skip', reason: 'already at v0.13' });
+    expect(decide(handbooks, { tag: 'v0.14.0' })).toEqual({ action: 'repin', version: '0.14.0', tag: 'v0.14.0' });
   });
 });
 
@@ -59,6 +67,9 @@ describe('refresh driver refusals and outputs', () => {
     expect(() => checkManifest('nen', { tag: 'v0.30.0', manifestVersion: 'v0.30.0' }, '0.30.0')).not.toThrow();
     expect(() => checkManifest('nen', { tag: 'v0.30.0', manifestVersion: '0.29.0' }, '0.30.0')).toThrow(/manifest disagrees with its tag/);
     expect(() => checkManifest('handbooks', { tag: 'v1.0.0', manifestVersion: null }, '1.0.0')).not.toThrow();
+    expect(() => checkManifest('handbooks', { tag: 'v0.11.0', manifestVersion: 'v0.11' }, '0.11.0')).not.toThrow();
+    expect(() => checkManifest('handbooks', { tag: 'v0.12.0', manifestVersion: 'v0.11' }, '0.12.0')).toThrow(/manifest disagrees with its tag/);
+    expect(() => checkManifest('handbooks', { tag: 'v0.12.0', manifestVersion: 'twelve' }, '0.12.0')).toThrow(/manifest disagrees with its tag/);
   });
   it('writes the step outputs the workflow reads', () => {
     expect(outputLines([], true)).toBe('changed=false\nsummary=no newer release\n');
@@ -100,6 +111,15 @@ describe('readRelease', () => {
     });
     await expect(readRelease('zheref/nen', { versionFrom: 'package.json#version', fetchImpl: asFetch(fetchImpl) })).rejects.toThrow(/has no version/);
   });
+  it('reads a plain-text version file as the manifest, and refuses an empty one', async () => {
+    const read = (text: string) => respond({
+      '/releases/latest': { body: { tag_name: 'v0.14.0' } },
+      '/commits/v0.14.0': { body: { sha } },
+      [`/contents/handbooks/VERSION?ref=${sha}`]: { body: { content: Buffer.from(text).toString('base64') } },
+    });
+    expect(await readRelease('zheref/bankai-handbooks', { versionFrom: 'handbooks/VERSION', fetchImpl: asFetch(read('v0.14\n')) })).toMatchObject({ tag: 'v0.14.0', commit: sha, manifestVersion: 'v0.14' });
+    await expect(readRelease('zheref/bankai-handbooks', { versionFrom: 'handbooks/VERSION', fetchImpl: asFetch(read('  \n')) })).rejects.toThrow(/has no version/);
+  });
   it('fails loudly on an API error or a tag that names no commit', async () => {
     await expect(readRelease('zheref/x', { fetchImpl: asFetch(respond({ '/releases/latest': { status: 403 } })) })).rejects.toThrow(/HTTP 403/);
     const fetchImpl = respond({ '/releases/latest': { body: { tag_name: 'v1.0.0' } }, '/commits/v1.0.0': { body: { sha: 'nope' } } });
@@ -127,9 +147,11 @@ describe('checkRepin (the landing gate)', () => {
     const url = repinned();
     url.repos.nen.url = 'https://github.com/attacker/nen';
     expect(checkRepin(sources, url)).toContain('nen.url changed');
-    const handbooks = structuredClone(sources);
-    handbooks.repos.handbooks.commit = sha;
-    expect(checkRepin(sources, handbooks)).toContain('handbooks is not followed by release and may not move');
+    const unfollowed = structuredClone(sources);
+    delete unfollowed.repos.handbooks.follow;
+    const moved = structuredClone(unfollowed);
+    moved.repos.handbooks.commit = sha;
+    expect(checkRepin(unfollowed, moved)).toContain('handbooks is not followed by release and may not move');
     const extra = repinned();
     extra.$comment = 'rewritten';
     expect(checkRepin(sources, extra)).toContain('$comment changed');
