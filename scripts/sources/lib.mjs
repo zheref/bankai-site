@@ -1,5 +1,5 @@
-import { readFileSync, existsSync } from 'node:fs';
-import { resolve, dirname } from 'node:path';
+import { readFileSync, existsSync, realpathSync } from 'node:fs';
+import { resolve, dirname, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
 
@@ -28,7 +28,12 @@ export function headOf(dir) {
 export function read(dir, rel) {
   const p = resolve(dir, rel);
   if (!existsSync(p)) throw new Error(`missing ${rel} under ${dir}`);
-  return readFileSync(p, 'utf8');
+  // A followed repository's release reaches the published site unattended, so a checked-in symlink may not lead the
+  // collector to a file outside that checkout (both sides resolved, so a symlinked .sources or override path still reads).
+  const root = realpathSync(dir);
+  const real = realpathSync(p);
+  if (real !== root && !real.startsWith(`${root}${sep}`)) throw new Error(`${rel} under ${dir} resolves outside the checkout (${real})`);
+  return readFileSync(real, 'utf8');
 }
 
 /** YAML-ish frontmatter: only top-level `key: value` scalars, which is all SKILL.md and agent files carry. */

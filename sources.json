@@ -22,6 +22,7 @@
     },
     "handbooks": {
       "url": "https://github.com/zheref/bankai-handbooks",
+      "follow": "release",
       "ref": "main",
       "commit": "39b8e06d3c662977794a0bfb5c8ced48a18b91ab",
       "version": "v0.13",
