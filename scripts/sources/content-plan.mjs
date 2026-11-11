@@ -9,12 +9,12 @@ import { siteRoot, frontmatter, read } from './lib.mjs';
 // The handwritten claims' upstream dependencies. Generated-only pages need no author.
 export const dependencies = {
   'getting-started.mdx': { hatsu: ['docs/using/', 'claude/skills/ten/', 'claude/skills/breath/'], nen: ['bootstrap/'] },
-  'hatsu-guide.mdx': { hatsu: ['claude/agents/', 'docs/ROSTER.md'] },
-  'concepts.mdx': { hatsu: ['claude/skills/ren/', 'claude/skills/aka/', 'claude/skills/mukai/', 'claude/skills/en/', 'docs/WORKFLOW.md'] },
-  'tiers-and-phases.mdx': { hatsu: ['docs/WORKFLOW.md', 'nen/workflow.json'] },
+  'hatsu-guide.mdx': { hatsu: ['claude/agents/', 'claude/skills/senkaimon/', 'docs/ROSTER.md'] },
+  'concepts.mdx': { hatsu: ['claude/skills/ren/', 'claude/skills/aka/', 'claude/skills/mukai/', 'claude/skills/en/', 'claude/skills/breath/', 'claude/skills/rasengan/', 'claude/skills/kokusen/', 'claude/skills/amaterasu/', 'claude/skills/spiritual-message/', 'claude/skills/jutaisho/', 'claude/skills/kagutsuchi/', 'claude/skills/mugetsu/', 'claude/skills/getsuga/', 'docs/WORKFLOW.md', 'nen/contract.json'] },
+  'tiers-and-phases.mdx': { hatsu: ['docs/WORKFLOW.md', 'nen/workflow.json', 'claude/skills/kuchiyose/'] },
   'configuration.mdx': { hatsu: ['docs/config/', 'nen/contract.json'] },
   'nen-reference.mdx': { nen: ['docs/USAGE.md', 'README.md'] },
-  'handbooks.mdx': { handbooks: ['handbooks/', 'README.md'] },
+  'handbooks.mdx': { handbooks: ['README.md', 'docs/'] },
   'index.mdx': { hatsu: ['README.md'] },
 };
 const git = (dir, args) => execFileSync('git', args, { cwd: dir, encoding: 'utf8', maxBuffer: 32 * 1024 * 1024 });

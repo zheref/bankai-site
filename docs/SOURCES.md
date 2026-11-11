@@ -70,7 +70,9 @@ Internal codenames inside repository prose are replaced by the configured Cloud 
 
 `source-released` repository dispatches start the release refresh immediately. Sender workflows and their
 scoped dispatch credentials live in the source repositories; a daily 03:23 UTC fallback and manual dispatch
-also discover published releases. Event payloads never supply shell commands or override source pins.
+also discover published releases. Set the repository variable `SOURCE_RELEASE_ACTOR` to the exact sender
+App actor (a finite comma-separated list if needed, never `*`); the pinned author action rejects other bots.
+The upstream sender issues own App provisioning. Event payloads never supply shell commands or override source pins.
 
 The refresh plans missing skill/agent names and handwritten pages whose upstream dependencies changed,
 with added changelog text as evidence. Generated-only changes use the pin-only path. An authoring job runs
@@ -78,14 +80,20 @@ only for a nonempty content plan, with a read-only repository token and either t
 `ANTHROPIC_API_KEY` or `CLAUDE_CODE_OAUTH_TOKEN`. It cannot publish. The pinned Claude action gets 30 turns;
 its notes explain each changed page and cite the release entry, or explain why an inspected page stays correct.
 
-A fresh read-only proof job validates the content bundle using the base's code, then runs source fetch,
+The author job uploads raw content files and notes; no local script runs after the model.
+A fresh read-only proof job reconstructs and validates the content bundle using the base's code, then runs source fetch,
 unit tests and the build suite. The dependency-free landing job validates again, commits pins and authored
 content separately, and updates the existing proposal branch. Only `src/data/names.json` and existing
 `src/content/docs/*.mdx` pages are admitted; traversal, symlinks, binaries, executable files, oversized
 bundles and missing names/dispositions are refused. Only the maintainer merges; the normal quality and
-Nen lanes still run on the proposal branch.
+Nen lanes still run on the proposal branch. Both proof and landing read the original detect/author
+artifacts in separate directories; the build runner forwards no publication bytes. Authored pages are
+restricted to inert prose: metadata, static component lines and link-bearing lines stay byte-identical.
+New JSX, expressions, ESM, code fences and ambiguous escapes are rejected before any build. More complex
+page changes require a separately reviewed manual edit.
 
-A failed authoring/proof attempt leaves no proposal. Subsequent automatic runs hold the same pins at the
+A failed authoring/proof attempt leaves no proposal. Timeouts, cancellations and partial landing failures
+also hold retries, preventing another paid author job merely to repair PR creation or dispatch. Subsequent automatic runs hold the same pins at the
 same base using the failed run's `prepared-sources` artifact, retained for 90 days (subject to repository
 retention policy). They cite that run rather than repeatedly spend authoring or fail. A manual dispatch
 retries after credentials/content are repaired; a new base or new release also permits a new attempt.

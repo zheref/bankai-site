@@ -118,3 +118,99 @@ describe('real content fixtures', () => {
     expect(() => pack(root, planned, notes)).toThrow(/forbidden path/);
   });
 });
+
+describe('inert authored prose', () => {
+  it('preserves trusted metadata, components and links while allowing prose updates', async () => {
+    const { validateProse } = await import('../../scripts/sources/content-bundle.mjs');
+    const before = '---\ntitle: Concepts\n---\n\n<SourceStamp />\n\nOld prose with `nen schema check --repo <path>`.\n\n[More](/docs/configuration/)\n';
+    expect(() => validateProse(before, before.replace('Old prose', 'Updated prose'))).not.toThrow();
+    for (const replacement of ['{process.exit(0)}', '<script />', 'import fs from "node:fs"', 'export const x = 1', '```js\ncode\n```', '~~~js\ncode\n~~~', '\\{escape}', 'unclosed `code', '[bad](javascript:alert)', '\tindented', '`{expression}`']) {
+      expect(() => validateProse(before, before.replace('Old prose', replacement))).toThrow();
+    }
+    expect(() => validateProse(before, before.replace('title: Concepts', 'title: Other'))).toThrow(/frontmatter/);
+    expect(() => validateProse(before, before.replace('<SourceStamp />', '<NenPin />'))).toThrow(/components/);
+    expect(() => validateProse(before, before.replace('\n\n<SourceStamp', '\ntext\n<SourceStamp'))).toThrow(/boundaries/);
+  });
+  it('accepts every current handwritten page unchanged under the restricted grammar', async () => {
+    const { readdirSync } = await import('node:fs');
+    const { validateProse } = await import('../../scripts/sources/content-bundle.mjs');
+    // Changelog is generated-only and never a planned authored page.
+    for (const file of readdirSync('src/content/docs').filter((p) => p.endsWith('.mdx') && p !== 'changelog.mdx')) {
+      const text = readFileSync(join('src/content/docs', file), 'utf8');
+      expect(() => validateProse(text, text), file).not.toThrow();
+    }
+  });
+  it('reconstructs only changed content in a fresh checkout and refuses deleted or executable pages', async () => {
+    const { cpSync, rmSync } = await import('node:fs');
+    const { collectAuthored } = await import('../../scripts/sources/content-bundle.mjs');
+    const root = mkdtempSync(join(tmpdir(), 'content-base-'));
+    const author = mkdtempSync(join(tmpdir(), 'content-author-'));
+    mkdirSync(join(root, 'src/data'), { recursive: true });
+    mkdirSync(join(root, 'src/content/docs'), { recursive: true });
+    writeFileSync(join(root, 'src/data/names.json'), JSON.stringify(names));
+    writeFileSync(join(root, plan.pages[0]!.path), '# Old loop\n');
+    cpSync(join(root, 'src'), join(author, 'src'), { recursive: true });
+    const value = bundle();
+    for (const file of value.files) writeFileSync(join(author, file.path), file.content);
+    writeFileSync(join(author, 'release-content-notes.json'), JSON.stringify(value.notes));
+    expect(collectAuthored(root, author, plan)).toEqual(value);
+    apply(root, collectAuthored(root, author, plan), plan);
+    expect(readFileSync(join(root, plan.pages[0]!.path), 'utf8')).toBe('# Updated loop\n');
+    writeFileSync(join(author, plan.pages[0]!.path), '{process.exit(0)}');
+    expect(() => collectAuthored(root, author, plan)).toThrow(/MDX/);
+    rmSync(join(author, plan.pages[0]!.path));
+    expect(() => collectAuthored(root, author, plan)).toThrow();
+  });
+});
+
+describe('release impact regressions', () => {
+  it('reviews handwritten warmup and CI claims when their governing skills change', () => {
+    expect(changedPages('hatsu', ['claude/skills/breath/SKILL.md'], '- Warmup changed.').map((p) => p.path)).toContain('src/content/docs/concepts.mdx');
+    expect(changedPages('hatsu', ['claude/skills/kuchiyose/SKILL.md'], '- CI installation changed.').map((p) => p.path)).toContain('src/content/docs/tiers-and-phases.mdx');
+  });
+  it('skips authoring for generated handbook title changes', () => {
+    expect(changedPages('handbooks', ['handbooks/ux-baseline.md', 'CHANGELOG.md'], '- Corrected a typo in the generated UX-1 title.')).toEqual([]);
+  });
+  it('renders changed and unchanged page evidence and pin-only output', async () => {
+    const { contentNotes } = await import('../../scripts/sources/content-notes.mjs');
+    expect(contentNotes(bundle())).toContain('updated');
+    const unchanged = bundle(); unchanged.notes[0]!.changed = false; unchanged.files = [];
+    expect(contentNotes(unchanged)).toContain('reviewed, unchanged');
+    expect(contentNotes(unchanged)).toContain('only the pin commit');
+  });
+});
+
+describe('attempt history outcomes', () => {
+  it.each(['failure', 'timed_out', 'cancelled', 'action_required', 'startup_failure'])('holds %s attempts using the original plan artifact', async (conclusion) => {
+    const { failedAttempt } = await import('../../scripts/sources/failed-attempt.mjs');
+    const run = (_exe: string, args: string[]) => {
+      if (args[0] === 'rev-parse') return 'base\n';
+      if (args[0] === 'run') {
+        const dir = args[args.indexOf('--dir') + 1]!;
+        writeFileSync(join(dir, 'base.txt'), 'base\n');
+        writeFileSync(join(dir, 'sources.json'), readFileSync('sources.json'));
+        return '';
+      }
+      const url = args[1]!;
+      if (url.includes('/workflows/')) { expect(url).toContain('status=completed'); return JSON.stringify({ workflow_runs: [{ id: 1, conclusion, html_url: 'https://example.test/run/1' }] }); }
+      if (url.includes('/jobs')) return JSON.stringify({ jobs: [{ name: conclusion === 'failure' ? 'land' : 'author', conclusion }] });
+      return JSON.stringify({ artifacts: [{ name: 'prepared-sources', expired: false }] });
+    };
+    const messages: string[] = [];
+    expect(failedAttempt({ env: { GITHUB_REPOSITORY: 'owner/site', GITHUB_RUN_ID: '2' }, run, log: (s: string) => messages.push(s) })).toBe(true);
+    expect(messages[0]).toContain('workflow_dispatch');
+  });
+  it('ignores successful, current, unstarted and expired attempts; fails closed on unread history', async () => {
+    const { failedAttempt } = await import('../../scripts/sources/failed-attempt.mjs');
+    const env = { GITHUB_REPOSITORY: 'owner/site', GITHUB_RUN_ID: '2' };
+    const run = (_exe: string, args: string[]) => {
+      if (args[0] === 'rev-parse') return 'base';
+      if (args[1]!.includes('/workflows/')) return JSON.stringify({ workflow_runs: [{ id: 1, conclusion: 'success' }, { id: 2 }, { id: 3 }, { id: 4 }] });
+      if (args[1]!.includes('/jobs')) return JSON.stringify({ jobs: [{ name: args[1]!.includes('/3/') ? 'detect' : 'prove', conclusion: 'failure' }] });
+      return JSON.stringify({ artifacts: [{ name: 'prepared-sources', expired: true }] });
+    };
+    expect(failedAttempt({ env, run })).toBe(false);
+    expect(() => failedAttempt({ env: {}, run })).toThrow(/GITHUB_REPOSITORY/);
+    expect(() => failedAttempt({ env, run: () => { throw new Error('offline'); } })).toThrow(/offline/);
+  });
+});

@@ -25,9 +25,12 @@
         "test": {
           "exe": "pnpm",
           "argv": [
-            "test"
+            "test:coverage"
           ],
-          "$comment": "vitest: names-map completeness, codename redaction, config, components. The slow build lane is `pnpm test:build`."
+          "$comment": "Run unit regression with V8 instrumentation once; coverage only reads its artifact.",
+          "artifacts": [
+            "coverage/lcov.info"
+          ]
         },
         "lint": {
           "exe": "pnpm",
@@ -37,14 +40,15 @@
           "$comment": "eslint then tsc --noEmit"
         },
         "coverage": {
-          "exe": "pnpm",
+          "exe": "node",
           "argv": [
-            "test:coverage"
+            "-e",
+            "require('node:fs').accessSync('coverage/lcov.info')"
           ],
-          "$comment": "vitest --coverage (v8); lcov.info is the report nen parses, json-summary beside it",
           "artifacts": [
             "coverage/lcov.info"
-          ]
+          ],
+          "$comment": "Extraction only: require the instrumented test artifact, then nen parses it. No tests execute here."
         },
         "ui-test": {
           "exe": "pnpm",
