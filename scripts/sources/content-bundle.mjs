@@ -33,6 +33,15 @@ export function validateBundle(bundle, plan, names) {
   for (const { kind, name } of plan.missing) {
     if (!['alias', 'description'].every((key) => typeof resultingNames[kind]?.[name]?.[key] === 'string' && resultingNames[kind][name][key].trim())) throw new Error(`content still missing: ${kind}/${name} alias and description`);
   }
+  for (const { kind, name } of plan.removed ?? []) {
+    if (Object.hasOwn(resultingNames[kind] ?? {}, name)) throw new Error(`stale content remains: ${kind}/${name}`);
+  }
+  if (plan.roster) {
+    for (const kind of ['skills', 'agents']) {
+      if (JSON.stringify(Object.keys(resultingNames[kind] ?? {}).sort()) !== JSON.stringify([...plan.roster[kind]].sort())) throw new Error(`names do not match pinned ${kind} roster`);
+    }
+    if (!Array.isArray(resultingNames.characterNames) || JSON.stringify([...resultingNames.characterNames].sort()) !== JSON.stringify([...plan.roster.agents].sort())) throw new Error('characterNames must match the pinned agent roster exactly');
+  }
   for (const page of plan.pages) {
     const note = bundle.notes.find((n) => n.path === page.path && n.url === page.url && typeof n.entry === 'string' && n.entry.trim() && page.changelog.includes(n.entry) && typeof n.reason === 'string' && n.reason.trim());
     if (!note) throw new Error(`content review still missing: ${page.path} (${page.repo})`);

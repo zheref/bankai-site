@@ -1,7 +1,7 @@
-import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, symlinkSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, symlinkSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { missingNames, changedPages } from '../../scripts/sources/content-plan.mjs';
+import { missingNames, changedPages, planNames } from '../../scripts/sources/content-plan.mjs';
 import { allowedContent, validateBundle, apply } from '../../scripts/sources/content-bundle.mjs';
 
 const plan = { missing: [{ kind: 'skills', name: 'new-skill' }], pages: [{ path: 'src/content/docs/concepts.mdx', repo: 'hatsu', url: 'https://github.com/zheref/hatsu/blob/abc/CHANGELOG.md', changelog: '- Changed the turn loop.' }] };
@@ -21,7 +21,7 @@ describe('release content planning', () => {
     expect(changedPages('hatsu', ['scripts/internal.mts', '.claude-plugin/plugin.json'], '- Fix internal check.')).toEqual([]);
   });
   it('carries the changelog evidence beside impacted handwritten pages', () => {
-    expect(changedPages('hatsu', ['claude/skills/ren/SKILL.md'], '- Changed loop.')).toEqual([{ path: 'src/content/docs/concepts.mdx', repo: 'hatsu', changelog: '- Changed loop.' }]);
+    expect(changedPages('hatsu', ['claude/skills/ren/SKILL.md'], '- Changed loop.')).toEqual(['getting-started', 'concepts'].map((page) => ({ path: `src/content/docs/${page}.mdx`, repo: 'hatsu', changelog: '- Changed loop.' })));
   });
 });
 describe('content artifact trust boundary', () => {
@@ -85,6 +85,7 @@ describe('real content fixtures', () => {
     writeFileSync(join(root, '.gitignore'), '.sources/\n');
     writeFileSync(join(root, 'src/data/names.json'), JSON.stringify(names));
     writeFileSync(join(root, plan.pages[0]!.path), '# Old loop\n');
+    writeFileSync(join(root, 'src/content/docs/getting-started.mdx'), '# First request\n');
     writeFileSync(join(upstream, '.claude-plugin/plugin.json'), '{"agents":["claude/agents/agent.md"]}');
     writeFileSync(join(upstream, 'claude/skills/new-skill/SKILL.md'), '---\ndescription: Skill purpose\n---\n');
     writeFileSync(join(upstream, 'claude/skills/ren/SKILL.md'), '---\ndescription: Loop\n---\nOld');
@@ -101,13 +102,13 @@ describe('real content fixtures', () => {
     const planned = planContent(before, after, { root });
     expect(planned.needed).toBe(true);
     expect(planned.missing).toHaveLength(3);
-    expect(planned.pages).toHaveLength(1);
+    expect(planned.pages).toHaveLength(2);
     expect(planned.releases[0]!.url).toContain(head);
     git(root, 'add', '.'); git(root, 'commit', '-qm', 'site');
-    const map = { skills: { 'new-skill': { alias: 'New', description: 'Purpose' }, ren: { alias: 'Loop', description: 'Loop purpose' } }, agents: { agent: { alias: 'Agent', description: 'Agent purpose' } } };
+    const map = { characterNames: ['agent'], skills: { 'new-skill': { alias: 'New', description: 'Purpose' }, ren: { alias: 'Loop', description: 'Loop purpose' } }, agents: { agent: { alias: 'Agent', description: 'Agent purpose' } } };
     writeFileSync(join(root, 'src/data/names.json'), JSON.stringify(map));
     writeFileSync(join(root, plan.pages[0]!.path), '# New loop\n');
-    const notes = [{ path: planned.pages[0]!.path, url: planned.pages[0]!.url, entry: '- Changed the turn loop.', changed: true, reason: 'Updated loop.' }];
+    const notes = planned.pages.map((page) => ({ path: page.path, url: page.url, entry: '- Changed the turn loop.', changed: page.path.endsWith('/concepts.mdx'), reason: page.path.endsWith('/concepts.mdx') ? 'Updated loop.' : 'First request remains correct.' }));
     const packed = pack(root, planned, notes);
     expect(packed.files).toHaveLength(2);
     git(root, 'restore', '.');
@@ -116,6 +117,13 @@ describe('real content fixtures', () => {
     expect(planContent(after, after, { root }).needed).toBe(false);
     writeFileSync(join(root, 'forbidden.txt'), 'escape');
     expect(() => pack(root, planned, notes)).toThrow(/forbidden path/);
+    rmSync(join(upstream, 'claude/skills/new-skill'), { recursive: true });
+    const removalOnly = planContent(after, after, { root });
+    expect(removalOnly.needed).toBe(true);
+    expect(removalOnly.missing).toEqual([]);
+    expect(removalOnly.pages).toEqual([]);
+    expect(removalOnly.removed).toEqual([{ kind: 'skills', name: 'new-skill' }]);
+    expect(() => validateBundle({ version: 1, files: [], notes: [] }, removalOnly, map)).toThrow(/stale content/);
   });
 });
 
@@ -167,6 +175,26 @@ describe('release impact regressions', () => {
   it('reviews handwritten warmup and CI claims when their governing skills change', () => {
     expect(changedPages('hatsu', ['claude/skills/breath/SKILL.md'], '- Warmup changed.').map((p) => p.path)).toContain('src/content/docs/concepts.mdx');
     expect(changedPages('hatsu', ['claude/skills/kuchiyose/SKILL.md'], '- CI installation changed.').map((p) => p.path)).toContain('src/content/docs/tiers-and-phases.mdx');
+  });
+  it.each(['ren', 'aka', 'mukai', 'en'])('reviews first-request and concepts claims when %s changes', (skill) => {
+    expect(changedPages('hatsu', [`claude/skills/${skill}/SKILL.md`], '- Turn changed.').map((p) => p.path)).toEqual(['src/content/docs/getting-started.mdx', 'src/content/docs/concepts.mdx']);
+  });
+  it('plans removed entries and rejects stale names or incomplete character rosters', () => {
+    const old = { skills: { retired: { alias: 'Retired', description: 'Old' } }, agents: { retiredAgent: { alias: 'Old', description: 'Old' } }, characterNames: ['retiredAgent'] };
+    const delta = planNames(old, [], [{ name: 'newAgent' }]);
+    expect(delta.removed).toEqual([{ kind: 'skills', name: 'retired' }, { kind: 'agents', name: 'retiredAgent' }]);
+    expect(delta.characterNamesChanged).toBe(true);
+    const planned = { ...delta, pages: [] };
+    const changed: { skills: Record<string, unknown>; agents: Record<string, unknown>; characterNames: string[] } = { ...old, agents: { newAgent: { alias: 'New', description: 'New agent' } } };
+    const artifact = (map: unknown) => ({ version: 1, files: [{ path: 'src/data/names.json', content: JSON.stringify(map) }], notes: [] });
+    expect(() => validateBundle(artifact(changed), planned, old)).toThrow(/stale content/);
+    changed.skills = {};
+    expect(() => validateBundle(artifact(changed), planned, old)).toThrow(/characterNames/);
+    changed.characterNames = ['newAgent'];
+    expect(() => validateBundle(artifact(changed), planned, old)).not.toThrow();
+    expect(() => validateBundle(artifact({ ...changed, agents: { ...changed.agents, extra: {} } }), planned, old)).toThrow(/pinned agents roster/);
+    expect(() => validateBundle(artifact({ ...changed, characterNames: ['newAgent', 'newAgent'] }), planned, old)).toThrow(/characterNames/);
+    expect(planNames(changed, [], [{ name: 'newAgent' }]).characterNamesChanged).toBe(false);
   });
   it('skips authoring for generated handbook title changes', () => {
     expect(changedPages('handbooks', ['handbooks/ux-baseline.md', 'CHANGELOG.md'], '- Corrected a typo in the generated UX-1 title.')).toEqual([]);

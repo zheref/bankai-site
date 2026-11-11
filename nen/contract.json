@@ -85,7 +85,9 @@
             "vitest",
             "run",
             "tests/unit/release.test.ts",
-            "tests/unit/content-refresh.test.ts"
+            "tests/unit/content-refresh.test.ts",
+            "tests/unit/names.test.ts",
+            "tests/unit/landing.test.tsx"
           ],
           "$comment": "Focused release refresh and content artifact boundary tests."
         }

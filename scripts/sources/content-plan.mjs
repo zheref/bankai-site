@@ -8,7 +8,7 @@ import { siteRoot, frontmatter, read } from './lib.mjs';
 
 // The handwritten claims' upstream dependencies. Generated-only pages need no author.
 export const dependencies = {
-  'getting-started.mdx': { hatsu: ['docs/using/', 'claude/skills/ten/', 'claude/skills/breath/'], nen: ['bootstrap/'] },
+  'getting-started.mdx': { hatsu: ['docs/using/', 'claude/skills/ten/', 'claude/skills/breath/', 'claude/skills/ren/', 'claude/skills/aka/', 'claude/skills/mukai/', 'claude/skills/en/'], nen: ['bootstrap/'] },
   'hatsu-guide.mdx': { hatsu: ['claude/agents/', 'claude/skills/senkaimon/', 'docs/ROSTER.md'] },
   'concepts.mdx': { hatsu: ['claude/skills/ren/', 'claude/skills/aka/', 'claude/skills/mukai/', 'claude/skills/en/', 'claude/skills/breath/', 'claude/skills/rasengan/', 'claude/skills/kokusen/', 'claude/skills/amaterasu/', 'claude/skills/spiritual-message/', 'claude/skills/jutaisho/', 'claude/skills/kagutsuchi/', 'claude/skills/mugetsu/', 'claude/skills/getsuga/', 'docs/WORKFLOW.md', 'nen/contract.json'] },
   'tiers-and-phases.mdx': { hatsu: ['docs/WORKFLOW.md', 'nen/workflow.json', 'claude/skills/kuchiyose/'] },
@@ -24,6 +24,13 @@ export function missingNames(names, skills, agents) {
     return !row || !['alias', 'description'].every((key) => typeof row[key] === 'string' && row[key].trim());
   }).map((entry) => ({ kind, ...entry })));
 }
+export function planNames(names, skills, agents) {
+  const roster = { skills: skills.map(({ name }) => name).sort(), agents: agents.map(({ name }) => name).sort() };
+  const missing = missingNames(names, skills, agents);
+  const removed = Object.entries(roster).flatMap(([kind, live]) => Object.keys(names[kind] ?? {}).filter((name) => !live.includes(name)).map((name) => ({ kind, name })));
+  const characterNamesChanged = JSON.stringify([...(names.characterNames ?? [])].sort()) !== JSON.stringify(roster.agents);
+  return { roster, missing, removed, characterNamesChanged };
+}
 export function changedPages(repo, paths, changelog) {
   if (!changelog.trim()) return [];
   return Object.entries(dependencies).filter(([, repos]) => paths.some((p) => (repos[repo] ?? []).some((prefix) => p.startsWith(prefix))))
@@ -36,7 +43,7 @@ export function planContent(before, after, { root = siteRoot } = {}) {
   const skills = readdirSync(resolve(upstream, 'claude/skills'), { withFileTypes: true }).filter((d) => d.isDirectory()).map((d) => entry('skills', d.name));
   const plugin = JSON.parse(read(upstream, '.claude-plugin/plugin.json'));
   const agents = plugin.agents.map((p) => entry('agents', basename(p)));
-  const missing = missingNames(names, skills, agents);
+  const namePlan = planNames(names, skills, agents);
   const pages = [];
   const releases = [];
   for (const [repo, now] of Object.entries(after.repos)) {
@@ -51,7 +58,7 @@ export function planContent(before, after, { root = siteRoot } = {}) {
     releases.push({ repo, ref: now.ref, commit: now.commit, url, changelog });
     pages.push(...changedPages(repo, paths, changelog).map((p) => ({ ...p, url })));
   }
-  return { version: 1, needed: missing.length > 0 || pages.length > 0, missing, pages, releases };
+  return { version: 1, needed: namePlan.missing.length > 0 || namePlan.removed.length > 0 || namePlan.characterNamesChanged || pages.length > 0, ...namePlan, pages, releases };
 }
 export function main([beforePath, outputPath] = []) {
   if (!beforePath || !outputPath) throw new Error('usage: content-plan.mjs <old-sources.json> <plan.json>');
