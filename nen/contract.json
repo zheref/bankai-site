@@ -6,6 +6,10 @@
       "gatsby": {
         "stack": "gatsby",
         "cwd": "."
+      },
+      "sources": {
+        "stack": "gatsby",
+        "cwd": "."
       }
     },
     "defaultLane": "gatsby",
@@ -21,9 +25,12 @@
         "test": {
           "exe": "pnpm",
           "argv": [
-            "test"
+            "test:coverage"
           ],
-          "$comment": "vitest: names-map completeness, codename redaction, config, components. The slow build lane is `pnpm test:build`."
+          "$comment": "Run unit regression with V8 instrumentation once; coverage only reads its artifact.",
+          "artifacts": [
+            "coverage/lcov.info"
+          ]
         },
         "lint": {
           "exe": "pnpm",
@@ -33,14 +40,15 @@
           "$comment": "eslint then tsc --noEmit"
         },
         "coverage": {
-          "exe": "pnpm",
+          "exe": "node",
           "argv": [
-            "test:coverage"
+            "-e",
+            "require('node:fs').accessSync('coverage/lcov.info')"
           ],
-          "$comment": "vitest --coverage (v8); lcov.info is the report nen parses, json-summary beside it",
           "artifacts": [
             "coverage/lcov.info"
-          ]
+          ],
+          "$comment": "Extraction only: require the instrumented test artifact, then nen parses it. No tests execute here."
         },
         "ui-test": {
           "exe": "pnpm",
@@ -67,6 +75,21 @@
         },
         "release": {
           "unsupported": "No release lane: the site deploys from main to GitHub Pages (.github/workflows/pages.yml); tags are optional."
+        }
+      },
+      "sources": {
+        "test": {
+          "exe": "pnpm",
+          "argv": [
+            "exec",
+            "vitest",
+            "run",
+            "tests/unit/release.test.ts",
+            "tests/unit/content-refresh.test.ts",
+            "tests/unit/names.test.ts",
+            "tests/unit/landing.test.tsx"
+          ],
+          "$comment": "Focused release refresh and content artifact boundary tests."
         }
       }
     },
@@ -113,6 +136,13 @@
           "kind": "path",
           "value": "node_modules/gatsby/package.json",
           "why": "Install locked dependencies with `pnpm install --frozen-lockfile` first: every verb on this lane is a pnpm script. The source repositories the build reads are fetched by `prebuild` (scripts/sources/collect.mjs) at the commits sources.json pins when absent."
+        }
+      ],
+      "sources": [
+        {
+          "kind": "path",
+          "value": "node_modules/vitest/package.json",
+          "why": "Install the locked dependencies first."
         }
       ]
     }

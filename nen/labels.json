@@ -275,6 +275,31 @@
       "name": "job/delivery-ops",
       "color": "5319e7",
       "description": "Commits, PR preparation, reviewer rounds, thread settlement, catch-up, CI redrive, release PRs"
+    },
+    {
+      "name": "model/claude",
+      "color": "0e8a16",
+      "description": "hatsu:direct's primary pick is on the Claude line (Anthropic)"
+    },
+    {
+      "name": "model/gpt",
+      "color": "0e8a16",
+      "description": "hatsu:direct's primary pick is on the GPT line (OpenAI)"
+    },
+    {
+      "name": "model/gemini",
+      "color": "0e8a16",
+      "description": "hatsu:direct's primary pick is on the Gemini line (Google)"
+    },
+    {
+      "name": "model/grok",
+      "color": "0e8a16",
+      "description": "hatsu:direct's primary pick is on the Grok line (xAI, served by Cursor)"
+    },
+    {
+      "name": "model/composer",
+      "color": "0e8a16",
+      "description": "hatsu:direct's primary pick is on Cursor's Composer line"
     }
   ]
 }
