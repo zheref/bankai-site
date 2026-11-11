@@ -65,3 +65,29 @@ Internal codenames inside repository prose are replaced by the configured Cloud 
 - **The custom domain** bankai.zheref.dev: GitHub Pages hosts the site (`.github/workflows/pages.yml`, the `github-pages` deploy target); until the domain's DNS record and the Pages custom-domain setting exist, it is served at https://zheref.github.io/bankai-site/.
 - **"Hosted, autonomous runs in your org, GitHub App agents, managed or self-hosted runners"** as the Cloud tier's rows: from the build prompt; no public repository describes the tier.
 - **The stage list** (which skills belong to which SDLC stage): the build prompt's grouping; the hatsu README groups skills by call site, not by SDLC stage.
+
+## Release content proposals
+
+`source-released` repository dispatches start the release refresh immediately. Sender workflows and their
+scoped dispatch credentials live in the source repositories; a daily 03:23 UTC fallback and manual dispatch
+also discover published releases. Event payloads never supply shell commands or override source pins.
+
+The refresh plans missing skill/agent names and handwritten pages whose upstream dependencies changed,
+with added changelog text as evidence. Generated-only changes use the pin-only path. An authoring job runs
+only for a nonempty content plan, with a read-only repository token and either the maintainer-provisioned
+`ANTHROPIC_API_KEY` or `CLAUDE_CODE_OAUTH_TOKEN`. It cannot publish. The pinned Claude action gets 30 turns;
+its notes explain each changed page and cite the release entry, or explain why an inspected page stays correct.
+
+A fresh read-only proof job validates the content bundle using the base's code, then runs source fetch,
+unit tests and the build suite. The dependency-free landing job validates again, commits pins and authored
+content separately, and updates the existing proposal branch. Only `src/data/names.json` and existing
+`src/content/docs/*.mdx` pages are admitted; traversal, symlinks, binaries, executable files, oversized
+bundles and missing names/dispositions are refused. Only the maintainer merges; the normal quality and
+Nen lanes still run on the proposal branch.
+
+A failed authoring/proof attempt leaves no proposal. Subsequent automatic runs hold the same pins at the
+same base using the failed run's `prepared-sources` artifact, retained for 90 days (subject to repository
+retention policy). They cite that run rather than repeatedly spend authoring or fail. A manual dispatch
+retries after credentials/content are repaired; a new base or new release also permits a new attempt.
+After artifact expiry or deletion, an automatic retry can occur. The failed run names the planned content
+still owed. No model credential is needed on the pin-only path.
