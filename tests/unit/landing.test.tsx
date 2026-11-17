@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { render, screen, fireEvent, within } from '@testing-library/react';
+import { generated } from '../helpers/generated';
 import { mockStaticQuery } from '../helpers/staticQuery';
 import names from '@/data/names.json';
 import { HeroFragment } from '@/features/landing/HeroFragment';
@@ -56,7 +57,8 @@ describe('ProblemFragment and LayersFragment', () => {
   });
   it('quotes the live skill and agent counts in the Hatsu card', () => {
     render(<LayersFragment />);
-    expect(screen.getByText(/60\+ skills, 17 agents/)).toBeInTheDocument();
+    const hatsu = generated<{ skillCount: number; agentCount: number }>('hatsu.json');
+    expect(screen.getByText(new RegExp(`${hatsu.skillCount >= 60 ? '60\\+' : hatsu.skillCount} skills, ${hatsu.agentCount} agents`))).toBeInTheDocument();
   });
 });
 

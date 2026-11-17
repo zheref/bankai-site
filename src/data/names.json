@@ -1,5 +1,5 @@
 {
-  "$comment": "The one names map: every Hatsu skill and agent with its code name (as the repository spells it), a plain alias and a one-line description. Aliases marked aliasSource 'D4' come from the Naming section D4 of the Craft build-prompt document (2026-11-04); 'derived' aliases are the site's plain-English reading of the hatsu README's Meaning column and are flagged for review. Code names stay as the OSS spells them (Sergio's call); the shibari \u2192 musubi rename is PROPOSED only. A build-time test fails when a skill or agent in the hatsu repository is missing here. Descriptions are the site's own one-liners; the repository's frontmatter is rendered beside them on the docs pages.",
+  "$comment": "The one names map: every Hatsu skill and agent with its code name (as the repository spells it), a plain alias and a one-line description. Aliases marked aliasSource 'D4' come from the Naming section D4 of the Craft build-prompt document (2026-11-04); 'derived' aliases are the site's plain-English reading of the hatsu README's Meaning column and are flagged for review. Code names stay as the OSS spells them (Sergio's call); the shibari → musubi rename is PROPOSED only. A build-time test fails when a skill or agent in the hatsu repository is missing here. Descriptions are the site's own one-liners; the repository's frontmatter is rendered beside them on the docs pages.",
   "proposedRenames": [
     {
       "from": "shibari",
@@ -574,6 +574,12 @@
       "group": "release-canon",
       "description": "One port ruling recorded as a row in the handbooks' ports file, one PR per run.",
       "gate": "G4"
+    },
+    "senkaimon": {
+      "alias": "Review PRs on a device",
+      "aliasSource": "derived",
+      "description": "Try open pull requests on a declared device, one at a time, before the maintainer chooses merge or revision.",
+      "gate": "G2"
     }
   },
   "plainWordSkills": [

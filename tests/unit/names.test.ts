@@ -1,8 +1,12 @@
+import { readFileSync, readdirSync } from 'node:fs';
+import { basename } from 'node:path';
 import names from '@/data/names.json';
 import { generated } from '../helpers/generated';
 
 type Hatsu = { skills: Array<{ name: string; inNamesMap: boolean; alias: string | null; description: string | null }>; agents: Array<{ name: string; inNamesMap: boolean; alias: string | null }>; skillCount: number; agentCount: number };
 const hatsu = generated<Hatsu>('hatsu.json');
+const pinnedAgents = (JSON.parse(readFileSync('.sources/hatsu/.claude-plugin/plugin.json', 'utf8')).agents as string[]).map((p) => basename(p, '.md'));
+const pinnedSkills = readdirSync('.sources/hatsu/claude/skills', { withFileTypes: true }).filter((d) => d.isDirectory()).map((d) => d.name);
 
 describe('names.json covers the hatsu repository', () => {
   it('lists every skill directory the repository ships (the collector refuses a build with one missing; this test checks CI)', () => {
@@ -31,12 +35,14 @@ describe('names.json covers the hatsu repository', () => {
     expect(names.skills).not.toHaveProperty('musubi');
     expect(names.proposedRenames).toEqual([expect.objectContaining({ from: 'shibari', to: 'musubi', status: 'proposed' })]);
   });
-  it('carries the 17 character names used by the commercial-page check', () => {
-    expect(names.characterNames).toHaveLength(17);
-    expect(new Set(names.characterNames)).toEqual(new Set(Object.keys(names.agents)));
+  it('carries exactly the pinned character roster used by the commercial-page check', () => {
+    expect(names.characterNames).toHaveLength(pinnedAgents.length);
+    expect(new Set(names.characterNames)).toEqual(new Set(pinnedAgents));
   });
-  it('matches the counts the copy quotes: 60+ skills, 17 agents', () => {
-    expect(hatsu.skillCount).toBeGreaterThanOrEqual(60);
-    expect(hatsu.agentCount).toBe(17);
+  it('matches the pinned source roster and its counts', () => {
+    expect(hatsu.skills.map((s) => s.name).sort()).toEqual(pinnedSkills.sort());
+    expect(hatsu.agents.map((a) => a.name).sort()).toEqual(pinnedAgents.sort());
+    expect(hatsu.skillCount).toBe(pinnedSkills.length);
+    expect(hatsu.agentCount).toBe(pinnedAgents.length);
   });
 });
