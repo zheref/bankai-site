@@ -16,6 +16,17 @@ Two commands that need nothing but a clone: no target repository, no network, no
 
 <Snippet id="nen-try" showSource />
 
+## v0.31.0 notes
+
+The [v0.31.0 release](https://github.com/zheref/nen/releases/tag/v0.31.0) raises the compatibility floor to `0.31`: this binary refuses consumers pinned below it. Consumers moving from 0.30 must update `dependency.minimum` to `"0.31"` and `dependency.pinned_ref` to `v0.31.0`, and account for these changes:
+
+- **Prompt receipts:** an attention marker from `nen stop --mark` no longer releases a local slot. After showing the prompt, record `nen stop --prompt-shown` with the effort ID, PR number, judged head SHA and gate (`--effort`, `--pr`, `--head`, `--gate G2|G4`), then pass the matching `--prompt-gate G2|G4` to `nen loop slots --from-run`. A missing receipt or gate, or a changed PR head, holds the slot. ([#622](https://github.com/zheref/nen/pull/622), [#655](https://github.com/zheref/nen/pull/655))
+- **Expo detection:** `nen shu detect` proposes `build`, `test`, `ui-test`, `archive` and `coverage` only when the lane's own `package.json` has the required script or dependency. A build proposal requires an explicit `expo export`; `expo run:*` alone is insufficient. ([#643](https://github.com/zheref/nen/pull/643))
+- **Label dry-runs:** `labels sync` and `classify install --sync` append the remote's existing values to `would update` lines, for example `(was: color #000000)` or `(was: description "old")`. Update exact-output comparisons. Use `nen labels sync` with `--ref` naming the branch to diff an unmerged declaration. ([#596](https://github.com/zheref/nen/pull/596))
+- **Sixth-stop handoffs:** live `nen pr request-reviews --json` adds `repo`, `pr`, `requestHead` and `exitCode`, with resolved `unrecordedBots[].login` on exit 9. Head-pinned `nen watch until --pr --until ready --require-base-gates --json`, without caller gate overrides, adds `intervalMs` and `sixthStopObservations`. With `--prompt-gate`, `nen loop slots --from-run` can release a local slot on a verified `nen.stop.sixth-stop/v0.1` handoff while readiness is still `not-ready`; unreadable records and `--repair-hold` keep it held. Its `facts` also includes sixth-stop status. ([#655](https://github.com/zheref/nen/pull/655))
+- **Delta review ledgers:** upgrade to v0.31.0 before reading or writing invocations with `outcome: "delta"` (`nen review ledger record --outcome delta`); older Nen rejects those stored ledgers. ([#678](https://github.com/zheref/nen/pull/678))
+- **Codex instruction size:** `nen surface mirror generate` and `nen surface mirror check` exit 2 when the Codex `AGENTS.md` exceeds 32,768 UTF-8 bytes. Split the source instructions before regenerating. The limit stays fixed and no partial mirror is written; the diagnostic identifies the first affected persona or shared include, its byte range and the first unread byte. ([#641](https://github.com/zheref/nen/issues/641))
+
 ## Verb index
 
 <NenVerbs />
