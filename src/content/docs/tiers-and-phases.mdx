@@ -28,6 +28,8 @@ The run profile the loop reads: `fast`, `standard`, `thorough`. A landing always
 
 <HumanPhases />
 
+In [Hatsu v0.168.0](https://github.com/zheref/hatsu/releases/tag/v0.168.0), `mugetsu` records your typed G3 go as data before sending anything; if that record cannot be written, nothing is sent. The go lasts only for that run. A target is non-production only when it declares `nonProduction: true`; an absent or false flag means production, so `kagutsuchi` refuses that target.
+
 ## CI tiers
 
 An adopted repository can also carry CI reviewer lanes, installed by `kuchiyose` (install a CI tier) as one version-controlled PR: it reads the tier catalogue at the pinned provider tag, asks the per-repository rulings, writes the caller workflow and the gate entries, and prints the day-one ceremony that stays yours (the Apps, the secrets, the required-checks ruleset). It never creates an App, sets a secret, applies a ruleset or merges. Hosted, autonomous runs of the whole loop are the future Cloud tier, coming later.

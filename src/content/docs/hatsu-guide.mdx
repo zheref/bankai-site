@@ -10,6 +10,15 @@ Hatsu is the governance harness: a plugin of skills and agents for Claude Code, 
 
 <SourceStamp />
 
+## v0.168.0 notes
+
+The [published release notes](https://github.com/zheref/hatsu/releases/tag/v0.168.0) describe these changes beyond the catalogue summaries:
+
+- The trusted-guard preflight accounts for every guard it derives, reports missing adapters alongside other results, and fails the PR test lane for an unhandled trusted guard.
+- A catch-up that resolves a conflict of meaning reopens review of the merged head: applicable reviewers run a bounded delta pass before readiness is reported. A clean or mechanical catch-up carries the settled review forward.
+- Declined cleanup rows are remembered and still offered. Matching rows from earlier sittings can be bundled by class for up to 30 days from their first decline; they are not silently discarded.
+- `limbo` uses Nen's portable mirror form: it resolves the canon checkout and passes the repository's scenario explicitly to the mirror commands.
+
 ## The lead agent
 
 <LeadAgent />

@@ -22,6 +22,12 @@ Hatsu drives work **to** a gate and stops there. Clause ids are the governance c
 
 Nothing merges `main` except the release skill merging its own release-proposal PR inside its stated bounds. Nothing casts a review vote. Nothing publishes a release on its own authority: publication runs only on your typed go at G3. No GitHub App, no bot identity.
 
+## Generated copies and ownership
+
+A placed file is treated as Hatsu's own only when its marker was generated in the form and position the generator writes. Quoting a marker somewhere in a page is not enough. This ownership check authorises the warm-up's unattended full-surface install and decides which placed files a refresh may replace or remove.
+
+A mirrored source carrying a concrete marker literal is refused before check or generate; explanatory prose must use a placeholder instead. See the [Hatsu v0.168.0 release notes](https://github.com/zheref/hatsu/releases/tag/v0.168.0) for the accepted marker positions and source checks.
+
 ## The Nen contract
 
 `nen` is a hard, version-ranged, fail-closed dependency with auto-install. Every deterministic step is one of its verbs; there is no improvised fallback for a Nen-owned operation. `nen/contract.json` is the single source of truth for the pin: `dependency.minimum` (the range) and `dependency.pinned_ref` (the build the bootstrap installs) move independently. Absent, the warm-up runs Nen's own checksum-verified bootstrap, fetched to a file, never piped; out of range, it re-pins through the verb; a checksum failure is never retried. The session halts only when the bootstrap itself fails, printing the exact command for you to run.
