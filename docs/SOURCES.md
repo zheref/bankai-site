@@ -78,6 +78,8 @@ These citations cover the new release notes only; the 2026-11-04 verification ta
 
 ## Release content proposals
 
+Use the [per-release docs and marketing checklist](RELEASE-CONTENT.md) for each published nen or Hatsu release, including the manual breaking-change, rename and marketing review.
+
 `source-released` repository dispatches start the release refresh immediately. Sender workflows and their
 scoped dispatch credentials live in the source repositories; a daily 03:23 UTC fallback and manual dispatch
 also discover published releases. Set the repository variable `SOURCE_RELEASE_ACTOR` to the exact sender
