@@ -5,9 +5,9 @@
     "hatsu": {
       "url": "https://github.com/zheref/hatsu",
       "follow": "release",
-      "ref": "v0.166.0",
-      "commit": "274934de01c65df39b12d2d8fd05fb13104e458b",
-      "version": "0.166.0",
+      "ref": "v0.168.0",
+      "commit": "2b62f77b3c0feb81c4b0590c3002bb1cb089f0c7",
+      "version": "0.168.0",
       "versionFrom": ".claude-plugin/plugin.json#version",
       "reads": ["README.md", "docs/using/*.md", "docs/WORKFLOW.md", "docs/config/README.md", "claude/skills/*/SKILL.md", "claude/agents/*.md", ".claude-plugin/plugin.json", "nen/contract.json", "nen/workflow.json", "CHANGELOG.md"]
     },
