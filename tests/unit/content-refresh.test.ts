@@ -209,6 +209,39 @@ describe('release impact regressions', () => {
 });
 
 describe('attempt history outcomes', () => {
+  it.each([true, false])('projects full run pages without losing older attempts (matching pins: %s)', async (matching) => {
+    const { failedAttempt } = await import('../../scripts/sources/failed-attempt.mjs');
+    const pages: number[] = [];
+    const messages: string[] = [];
+    const run = (exe: string, args: string[]) => {
+      if (exe === 'git') return 'base\n';
+      if (args[0] === 'run') {
+        const dir = args[args.indexOf('--dir') + 1]!;
+        writeFileSync(join(dir, 'base.txt'), 'base\n');
+        const sources = JSON.parse(readFileSync('sources.json', 'utf8'));
+        if (!matching) sources.repos.hatsu.commit = 'older-release';
+        writeFileSync(join(dir, 'sources.json'), JSON.stringify(sources));
+        return '';
+      }
+      const url = args[1]!;
+      if (url.includes('/workflows/')) {
+        // The child must filter before execFileSync buffers stdout, not after JSON.parse.
+        expect(args.slice(2)).toEqual(['--jq', '{workflow_runs: [.workflow_runs[] | {id, conclusion, html_url}]}']);
+        const page = Number(new URL(`https://api.github.com/${url}`).searchParams.get('page'));
+        pages.push(page);
+        // A full successful page must not hide a retained failed attempt on the next page.
+        return JSON.stringify({ workflow_runs: page === 1
+          ? Array.from({ length: 100 }, (_, id) => ({ id, conclusion: 'success', html_url: `https://example.test/run/${id}` }))
+          : [{ id: 101, conclusion: 'failure', html_url: 'https://example.test/run/101' }] });
+      }
+      if (url.includes('/jobs')) return JSON.stringify({ jobs: [{ name: 'author', conclusion: 'failure' }] });
+      return JSON.stringify({ artifacts: [{ name: 'prepared-sources', expired: false }] });
+    };
+    expect(failedAttempt({ env: { GITHUB_REPOSITORY: 'owner/site', GITHUB_RUN_ID: '102' }, run, log: (s: string) => messages.push(s) })).toBe(matching);
+    expect(pages).toEqual([1, 2]);
+    expect(messages).toHaveLength(matching ? 1 : 0);
+    if (matching) expect(messages[0]).toContain('https://example.test/run/101');
+  });
   it.each(['failure', 'timed_out', 'cancelled', 'action_required', 'startup_failure'])('holds %s attempts using the original plan artifact', async (conclusion) => {
     const { failedAttempt } = await import('../../scripts/sources/failed-attempt.mjs');
     const run = (_exe: string, args: string[]) => {
