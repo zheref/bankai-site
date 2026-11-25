@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
+import { generated } from '../tests/helpers/generated';
 
 const axeCheck = async (page: import('@playwright/test').Page, name: string) => {
   const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze();
@@ -7,6 +8,19 @@ const axeCheck = async (page: import('@playwright/test').Page, name: string) => 
 };
 
 test.describe('landing', () => {
+  test('current versions match the build sources and link to the changelog', async ({ page }) => {
+    await page.goto('/');
+    const region = page.getByRole('region', { name: 'Current versions' });
+    await expect(region).toBeVisible();
+    for (const name of ['hatsu', 'nen', 'handbooks']) {
+      const { version } = generated<{ version: string }>(`${name}.json`);
+      await expect(region.getByRole('definition').filter({ hasText: `v${version.replace(/^v/, '')}` })).toHaveCount(1);
+    }
+    await region.getByRole('link', { name: 'Changelog' }).click();
+    await expect(page).toHaveURL(/\/docs\/changelog\/$/);
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Changelog');
+  });
+
   test('hero CTAs work and the page passes axe in dark and light themes', async ({ page }) => {
     await page.goto('/');
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('Agents do the work. You hold the gates.');
