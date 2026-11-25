@@ -43,6 +43,12 @@ Check the version first: below `2026.01` the install succeeds and the surface se
 
 <Snippet id="usage-antigravity" showSource />
 
+### Nen v0.31.0: Codex / Cursor installation note
+
+When installing or refreshing from Codex or Cursor, a mirror command may report an oversized **Codex `AGENTS.md`**. In Nen v0.31.0, `nen surface mirror generate` and `nen surface mirror check` exit 2 above **32,768 UTF-8 bytes**. Split oversized source instructions before regenerating so the generated file fits the limit. The read limit is not raised and no partial mirror is written. The diagnostic identifies the first affected source, its byte range and the first unread byte. See the [Nen v0.31.0 consumer notes](https://github.com/zheref/nen/releases/tag/v0.31.0).
+
+Hatsu's own instruction split belongs to a later published Hatsu release; this Nen release does not deliver it. Hatsu's Nen pin may still be 0.30 until a later published Hatsu release adopts 0.31, so the latest Nen snippet below can be newer than Hatsu's pinned bootstrap. Check the contract-derived pin below: the v0.31.0 binary refuses a consumer pinned below the 0.31 floor.
+
 ## 3. Nen, at the version Hatsu pins
 
 Hatsu's warm-up installs the pinned Nen for you, checksum-verified, and links it at `~/.local/bin/nen` so your terminal and the agent run the same build. By hand, the same bootstrap at the ref Hatsu's contract pins:

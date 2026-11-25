@@ -57,6 +57,16 @@ Internal codenames inside repository prose are replaced by the configured Cloud 
 | GitHub Sponsors URL | the build prompt (`https://github.com/sponsors/zheref`) |
 | Disclaimer, full and short | the build prompt, the Build spec and the asset README (identical wording) |
 
+### Nen v0.31.0 copy verification — 2026-11-25
+
+These citations cover the new release notes only; the 2026-11-04 verification table above remains a historical record.
+
+| Claim | Source |
+|---|---|
+| `nen-reference.mdx`: the 0.31 floor; prompt receipts and `--prompt-gate`; Expo detection; label dry-run suffixes and `--ref`; sixth-stop JSON fields and slot release; delta-ledger compatibility; Codex's 32,768-byte refusal | [Nen v0.31.0 release, Breaking / consumer notes](https://github.com/zheref/nen/releases/tag/v0.31.0), checked against [CHANGELOG.md at the tag commit](https://github.com/zheref/nen/blob/a9b41c756d0b7e090c79df8d389bd95a2d8d7a3a/CHANGELOG.md) |
+| `getting-started.mdx`: mirror generate/check exit 2 above 32,768 UTF-8 bytes, split source instructions, unchanged limit and no partial mirror | Same release's consumer note for [nen #641](https://github.com/zheref/nen/issues/641) |
+| `getting-started.mdx`: Hatsu's own Nen pin remains separate; its 0.31 adoption and instruction split require a later published Hatsu release | The release's repin note; [Hatsu's pinned contract](https://github.com/zheref/hatsu/blob/274934de01c65df39b12d2d8fd05fb13104e458b/nen/contract.json); [bankai-site #11, AC-3](https://github.com/zheref/bankai-site/issues/11) |
+
 ## Unverified in the repositories
 
 - **ValleIA's site URL**: not in any repository or document read; `site.config.ts` → `services.providerUrl` is unset and the section renders a TBD badge instead of a link. The contact CTA points at the maintainer's GitHub profile until a route is decided.
