@@ -18,7 +18,10 @@ export function failedAttempt({ env = process.env, run = execFileSync, log = con
   const sources = JSON.parse(readFileSync('sources.json', 'utf8'));
   // Paginate completed runs: timeouts and cancellations are attempts too.
   for (let page = 1; ; page++) {
-    const data = json(['api', `repos/${repo}/actions/workflows/sources-refresh.yml/runs?status=completed&branch=main&per_page=100&page=${page}`]);
+    // A full 100-run response exceeds execFileSync's 1 MiB stdout buffer. Project in gh, before Node buffers it;
+    // keep every run so the page length still determines whether older attempts need checking.
+    const data = json(['api', `repos/${repo}/actions/workflows/sources-refresh.yml/runs?status=completed&branch=main&per_page=100&page=${page}`,
+      '--jq', '{workflow_runs: [.workflow_runs[] | {id, conclusion, html_url}]}']);
     for (const attempt of data.workflow_runs) {
       if (String(attempt.id) === env.GITHUB_RUN_ID || attempt.conclusion === 'success') continue;
       const jobs = json(['api', `repos/${repo}/actions/runs/${attempt.id}/jobs?per_page=100`]);
