@@ -3,6 +3,7 @@ import type { HeadFC, PageProps } from 'gatsby';
 import { Layout } from '@/features/shell/Layout';
 import { Seo } from '@/features/shell/Seo';
 import { HeroFragment } from '@/features/landing/HeroFragment';
+import { VersionsFragment } from '@/features/landing/VersionsFragment';
 import { ProblemFragment } from '@/features/landing/ProblemFragment';
 import { LayersFragment } from '@/features/landing/LayersFragment';
 import { StagesFragment } from '@/features/landing/StagesFragment';
@@ -16,6 +17,7 @@ import { FaqFragment } from '@/features/landing/FaqFragment';
 const IndexPage: React.FC<PageProps> = () => (
   <Layout>
     <HeroFragment />
+    <VersionsFragment />
     <ProblemFragment />
     <LayersFragment />
     <StagesFragment />

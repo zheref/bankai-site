@@ -24,6 +24,10 @@
     "terminalCaption": { "text": "A real flow: work a request, push, open the PR, drive it to Ready. The merge stays yours.", "review": true },
     "comingLater": { "text": "Coming later: Bankai-Library and hosted, autonomous runs. The path keeps going.", "source": "Spanish copy table → Coming later" }
   },
+  "versions": {
+    "title": { "text": "Current versions", "review": true },
+    "lead": { "text": "Read from the repositories at build time.", "review": true }
+  },
   "problem": {
     "title": { "text": "Agents are fast; lifecycles are messy.", "source": "Messaging hierarchy § 2" },
     "body": { "text": "PRs, releases and backlogs drift when every session improvises.", "source": "Messaging hierarchy § 2" }

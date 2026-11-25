@@ -152,7 +152,8 @@ describe('Layout and pages', () => {
   });
   it('renders the landing page with every section id the nav and the screenshots use', () => {
     const { container } = render(<IndexPage {...pageProps} />);
-    for (const id of ['hero', 'problem', 'how', 'stages', 'architecture', 'quickstart', 'open-source', 'support', 'services', 'faq']) expect(container.querySelector(`#${id}`), id).not.toBeNull();
+    for (const id of ['hero', 'versions', 'problem', 'how', 'stages', 'architecture', 'quickstart', 'open-source', 'support', 'services', 'faq']) expect(container.querySelector(`#${id}`), id).not.toBeNull();
+    expect(container.querySelector('#hero + #versions')).not.toBeNull();
   });
   it('renders the services page with an h1 and no character name, and the 404 page', () => {
     const { container, unmount } = render(<ServicesPage {...pageProps} />);
